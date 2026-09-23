@@ -263,17 +263,17 @@ export const InputPanel: React.FC<InputPanelProps> = ({
     (activeTab === 'audio' && audioData !== null);
 
   return (
-    <div className="bg-[#251f33] border border-[#3c3253] rounded-2xl shadow-xl overflow-hidden">
+    <div className="bg-white border border-[#d8dce6] rounded-2xl shadow-sm overflow-hidden">
       {/* Top Bar with Mode Tabs */}
-      <div className="bg-[#1f192c]/90 border-b border-[#3c3253] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1 sm:gap-2 bg-[#251f33] p-1 rounded-xl border border-[#3c3253]">
+      <div className="bg-[#f8f9fc] border-b border-[#e2e5ec] px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1 sm:gap-2 bg-[#edeef4] p-1 rounded-xl border border-[#d8dce6]">
           <button
             type="button"
             onClick={() => setActiveTab('text')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition ${
               activeTab === 'text'
-                ? 'bg-[#ff4545] text-white shadow-sm shadow-[#ff4545]/30'
-                : 'text-[#b2b6bf] hover:text-white hover:bg-[#2e2640]'
+                ? 'bg-[#ff4545] text-white shadow-sm shadow-[#ff4545]/20'
+                : 'text-[#555065] hover:text-[#2e2640] hover:bg-white'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -285,8 +285,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             onClick={() => setActiveTab('file')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition ${
               activeTab === 'file'
-                ? 'bg-[#ff4545] text-white shadow-sm shadow-[#ff4545]/30'
-                : 'text-[#b2b6bf] hover:text-white hover:bg-[#2e2640]'
+                ? 'bg-[#ff4545] text-white shadow-sm shadow-[#ff4545]/20'
+                : 'text-[#555065] hover:text-[#2e2640] hover:bg-white'
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
@@ -298,8 +298,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             onClick={() => setActiveTab('audio')}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition ${
               activeTab === 'audio'
-                ? 'bg-[#ff4545] text-white shadow-sm shadow-[#ff4545]/30'
-                : 'text-[#b2b6bf] hover:text-white hover:bg-[#2e2640]'
+                ? 'bg-[#ff4545] text-white shadow-sm shadow-[#ff4545]/20'
+                : 'text-[#555065] hover:text-[#2e2640] hover:bg-white'
             }`}
           >
             <Mic className="w-3.5 h-3.5 text-[#ff4545]" />
@@ -309,13 +309,13 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
         {/* Partner Name optional field */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Building2 className="w-4 h-4 text-[#b2b6bf] hidden sm:block" />
+          <Building2 className="w-4 h-4 text-[#555065] hidden sm:block" />
           <input
             type="text"
             placeholder="Nome da Empresa / Parceiro (ex: Hospital São Lucas)"
             value={partnerName}
             onChange={(e) => setPartnerName(e.target.value)}
-            className="w-full sm:w-72 bg-[#1f192c] border border-[#3c3253] rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-[#b2b6bf]/60 focus:outline-none focus:ring-1 focus:ring-[#ff4545] focus:border-[#ff4545]"
+            className="w-full sm:w-72 bg-white border border-[#d8dce6] rounded-xl px-3.5 py-1.5 text-xs text-[#2e2640] placeholder-[#9ba0ab] focus:outline-none focus:ring-1 focus:ring-[#ff4545] focus:border-[#ff4545]"
           />
         </div>
       </div>
@@ -323,15 +323,15 @@ export const InputPanel: React.FC<InputPanelProps> = ({
       {/* Main Content Area */}
       <div className="p-4 sm:p-6 space-y-4">
         {/* Presets Header */}
-        <div className="bg-[#1f192c]/60 border border-[#3c3253] rounded-xl p-3.5">
+        <div className="bg-[#f8f9fc] border border-[#e2e5ec] rounded-xl p-3.5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-[#b2b6bf] uppercase tracking-wider flex items-center gap-1.5 font-mono">
+            <span className="text-[11px] font-bold text-[#555065] uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <Sparkles className="w-3 h-3 text-[#ff4545]" />
               Casos Reais para Demonstração:
             </span>
             <button
               onClick={onOpenKnowledgeBase}
-              className="text-[11px] text-[#90a5e5] hover:text-white font-semibold flex items-center gap-1 transition"
+              className="text-[11px] text-[#364f99] hover:text-[#ff4545] font-semibold flex items-center gap-1 transition"
             >
               <BookOpen className="w-3 h-3" />
               Ver Catálogo de Metaprojetos
@@ -344,19 +344,19 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 key={preset.id}
                 type="button"
                 onClick={() => handleApplyPreset(preset)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#251f33] hover:bg-[#ff4545] hover:text-white text-[#e6eaeb] border border-[#3c3253] transition flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white hover:bg-[#ff4545] hover:text-white text-[#2e2640] border border-[#d8dce6] transition flex items-center gap-1.5 shadow-2xs"
                 title={preset.description}
               >
                 <span>{preset.title}</span>
-                <span className="text-[10px] text-[#90a5e5] hover:text-white font-mono">({preset.category})</span>
+                <span className="text-[10px] text-[#364f99] hover:text-white font-mono">({preset.category})</span>
               </button>
             ))}
           </div>
         </div>
 
         {transcriptNotice && (
-          <div className="text-xs text-[#89cea5] bg-[#89cea5]/10 border border-[#89cea5]/20 px-3 py-2 rounded-lg flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-[#89cea5]" />
+          <div className="text-xs text-[#066d73] bg-[#89cea5]/20 border border-[#89cea5]/40 px-3 py-2 rounded-lg flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-[#066d73]" />
             <span>{transcriptNotice}</span>
           </div>
         )}
@@ -364,11 +364,11 @@ export const InputPanel: React.FC<InputPanelProps> = ({
         {/* Tab 1: Text */}
         {activeTab === 'text' && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-[#b2b6bf]">
-              <label htmlFor="briefing-textarea" className="font-semibold text-[#e6eaeb]">
+            <div className="flex items-center justify-between text-xs text-[#555065]">
+              <label htmlFor="briefing-textarea" className="font-semibold text-[#2e2640]">
                 Cole o texto do desafio, e-mail do parceiro ou ata de reunião:
               </label>
-              <span className="font-mono text-[11px]">{textContent.length} caracteres</span>
+              <span className="font-mono text-[11px] text-[#6c657e]">{textContent.length} caracteres</span>
             </div>
 
             <textarea
@@ -377,7 +377,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
               placeholder="Exemplo: 'Temos 3 dores operacionais na nossa fábrica: 1) Precisamos monitorar a vibração de motores elétricos em tempo real com sensores IoT; 2) Prever quando uma máquina irá falhar com Machine Learning; 3) Um portal web para o operador registrar ordens de serviço...'"
-              className="w-full bg-[#1f192c] border border-[#3c3253] rounded-xl p-4 text-sm text-[#e6eaeb] placeholder-[#b2b6bf]/50 focus:outline-none focus:ring-2 focus:ring-[#ff4545] focus:border-[#ff4545] font-sans resize-y leading-relaxed"
+              className="w-full bg-[#f8f9fc] border border-[#d8dce6] rounded-xl p-4 text-sm text-[#2e2640] placeholder-[#9ba0ab] focus:outline-none focus:ring-2 focus:ring-[#ff4545] focus:border-[#ff4545] font-sans resize-y leading-relaxed"
             />
           </div>
         )}
@@ -396,42 +396,42 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             {!selectedFile ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-[#3c3253] hover:border-[#ff4545]/60 rounded-2xl bg-[#1f192c]/50 cursor-pointer transition group"
+                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-[#d8dce6] hover:border-[#ff4545] rounded-2xl bg-[#f8f9fc] hover:bg-[#fffafa] cursor-pointer transition group"
               >
-                <div className="w-12 h-12 rounded-xl bg-[#2e2640] group-hover:bg-[#ff4545]/20 flex items-center justify-center text-[#90a5e5] group-hover:text-[#ff4545] mb-3 transition">
+                <div className="w-12 h-12 rounded-xl bg-[#edeef4] group-hover:bg-[#ff4545]/15 flex items-center justify-center text-[#364f99] group-hover:text-[#ff4545] mb-3 transition">
                   <Upload className="w-6 h-6" />
                 </div>
-                <p className="text-sm font-bold text-[#e6eaeb]">
+                <p className="text-sm font-bold text-[#2e2640]">
                   Clique ou arraste um documento ou planilha corporativa aqui
                 </p>
-                <p className="text-xs text-[#b2b6bf] mt-1">
+                <p className="text-xs text-[#6c657e] mt-1">
                   Formatos aceitos: PDF, Planilhas (CSV, XLSX), Documentos (DOCX, TXT)
                 </p>
-                <span className="mt-3 inline-flex items-center px-2.5 py-1 rounded text-[11px] font-medium bg-[#2e2640] text-[#90a5e5] border border-[#3c3253]">
+                <span className="mt-3 inline-flex items-center px-2.5 py-1 rounded text-[11px] font-medium bg-white text-[#364f99] border border-[#d8dce6]">
                   O assistente multimodal lerá as iniciativas contidas no documento
                 </span>
               </div>
             ) : (
-              <div className="bg-[#1f192c] border border-[#3c3253] rounded-xl p-4 space-y-3">
+              <div className="bg-[#f8f9fc] border border-[#d8dce6] rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#ff4545]/15 text-[#ff4545] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-[#ff4545]/10 text-[#ff4545] flex items-center justify-center">
                       {selectedFile.isSpreadsheet ? (
-                        <FileSpreadsheet className="w-5 h-5 text-[#89cea5]" />
+                        <FileSpreadsheet className="w-5 h-5 text-[#066d73]" />
                       ) : (
                         <FileText className="w-5 h-5 text-[#ff4545]" />
                       )}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-white">{selectedFile.file.name}</p>
+                        <p className="text-sm font-semibold text-[#2e2640]">{selectedFile.file.name}</p>
                         {selectedFile.isSpreadsheet && (
-                          <span className="text-[10px] bg-[#89cea5]/20 text-[#89cea5] px-2 py-0.5 rounded font-medium border border-[#89cea5]/30">
+                          <span className="text-[10px] bg-[#89cea5]/20 text-[#066d73] px-2 py-0.5 rounded font-medium border border-[#89cea5]/30">
                             Planilha Tabular
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-[#b2b6bf]">
+                      <p className="text-xs text-[#6c657e]">
                         {(selectedFile.file.size / 1024).toFixed(1)} KB • {selectedFile.rowCount ? `${selectedFile.rowCount} linhas detectadas` : selectedFile.mimeType}
                       </p>
                     </div>
@@ -442,7 +442,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowFilePreview(!showFilePreview)}
-                        className="text-xs px-2.5 py-1 rounded bg-[#2e2640] hover:bg-[#3c3253] text-[#caced6] flex items-center gap-1.5 transition"
+                        className="text-xs px-2.5 py-1 rounded bg-white hover:bg-[#edeef4] text-[#2e2640] border border-[#d8dce6] flex items-center gap-1.5 transition"
                       >
                         {showFilePreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                         <span>{showFilePreview ? 'Ocultar Prévia' : 'Ver Conteúdo'}</span>
@@ -454,7 +454,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                         setSelectedFile(null);
                         setShowFilePreview(false);
                       }}
-                      className="text-[#b2b6bf] hover:text-[#ff4545] p-1.5 transition"
+                      className="text-[#6c657e] hover:text-[#ff4545] p-1.5 transition"
                       title="Remover arquivo"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -464,9 +464,9 @@ export const InputPanel: React.FC<InputPanelProps> = ({
 
                 {selectedFile.sheetNames && selectedFile.sheetNames.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[11px] text-[#b2b6bf]">Abas identificadas:</span>
+                    <span className="text-[11px] text-[#555065]">Abas identificadas:</span>
                     {selectedFile.sheetNames.map((name, i) => (
-                      <span key={i} className="text-[11px] bg-[#2e2640] text-[#caced6] px-2 py-0.5 rounded border border-[#3c3253]">
+                      <span key={i} className="text-[11px] bg-white text-[#2e2640] px-2 py-0.5 rounded border border-[#d8dce6]">
                         {name}
                       </span>
                     ))}
@@ -474,8 +474,8 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                 )}
 
                 {selectedFile.previewText && showFilePreview && (
-                  <div className="bg-[#1b1626] border border-[#3c3253] rounded-lg p-3 text-xs text-[#caced6] font-mono max-h-48 overflow-y-auto">
-                    <p className="text-[10px] text-[#b2b6bf] uppercase tracking-wider mb-1">
+                  <div className="bg-white border border-[#d8dce6] rounded-lg p-3 text-xs text-[#2e2640] font-mono max-h-48 overflow-y-auto">
+                    <p className="text-[10px] text-[#555065] uppercase tracking-wider mb-1">
                       Texto extraído para análise do modelo:
                     </p>
                     <pre className="whitespace-pre-wrap leading-relaxed">{selectedFile.previewText}</pre>
@@ -496,20 +496,20 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             />
 
             {textContent && (
-              <div className="bg-[#1f192c] border border-[#3c3253] rounded-xl p-3.5 text-xs text-[#e6eaeb] space-y-1">
-                <span className="font-semibold text-[#b2b6bf]">Transcrição Associada:</span>
-                <p className="text-[#caced6] line-clamp-3 italic">&quot;{textContent}&quot;</p>
+              <div className="bg-[#f8f9fc] border border-[#d8dce6] rounded-xl p-3.5 text-xs text-[#2e2640] space-y-1">
+                <span className="font-semibold text-[#555065]">Transcrição Associada:</span>
+                <p className="text-[#2e2640] line-clamp-3 italic">&quot;{textContent}&quot;</p>
               </div>
             )}
           </div>
         )}
 
         {/* Action Button & Instructions */}
-        <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[#3c3253]">
-          <div className="text-xs text-[#b2b6bf] flex items-center gap-1.5">
+        <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-[#e2e5ec]">
+          <div className="text-xs text-[#555065] flex items-center gap-1.5">
             <HelpCircle className="w-4 h-4 text-[#ff4545] shrink-0" />
             <span>
-              Mapeamento multi-cenários: traz <strong className="text-[#e6eaeb]">até 3 opções de módulos</strong> com prós, contras e guia de decisão.
+              Mapeamento multi-cenários: traz <strong className="text-[#2e2640]">até 3 opções de módulos</strong> com prós, contras e guia de decisão.
             </span>
           </div>
 
@@ -517,10 +517,10 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             type="button"
             disabled={!hasContentToSubmit || isLoading}
             onClick={handleSubmit}
-            className={`flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl font-bold text-sm tracking-wide transition shadow-lg ${
+            className={`flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl font-bold text-sm tracking-wide transition shadow-md ${
               hasContentToSubmit && !isLoading
                 ? 'bg-[#ff4545] hover:bg-[#e03232] text-white shadow-[#ff4545]/25 transform hover:-translate-y-0.5 cursor-pointer'
-                : 'bg-[#2e2640] text-[#b2b6bf]/50 cursor-not-allowed border border-[#3c3253]'
+                : 'bg-[#edeef4] text-[#9ba0ab] cursor-not-allowed border border-[#d8dce6]'
             }`}
           >
             {isLoading ? (

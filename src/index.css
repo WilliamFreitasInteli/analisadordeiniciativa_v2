@@ -5,38 +5,38 @@
   --font-heading: 'Platypi', 'Manrope', Georgia, serif;
   --font-mono: 'Space Mono', monospace;
 
-  /* Inteli Brandbook 2025 Official Colors */
+  /* Inteli Brandbook 2025 Official Colors & Proportions */
   --color-inteli-purple: #2e2640;
   --color-inteli-purple-dark: #1b1626;
-  --color-inteli-purple-card: #251f33;
-  --color-inteli-purple-border: #3c3253;
+  --color-inteli-purple-card: #ffffff;
+  --color-inteli-purple-border: #d8dce6;
   --color-inteli-coral: #ff4545;
   --color-inteli-coral-dark: #e03232;
   --color-inteli-coral-light: #ff7575;
   --color-inteli-lilac: #90a5e5;
   --color-inteli-green: #89cea5;
   --color-inteli-green-dark: #066d73;
-  --color-inteli-gray-dark: #b2b6bf;
-  --color-inteli-gray-mid: #caced6;
-  --color-inteli-gray-light: #e6eaeb;
+  --color-inteli-gray-dark: #555065;
+  --color-inteli-gray-mid: #9ba0ab;
+  --color-inteli-gray-light: #f4f6f9;
   --color-inteli-white: #ffffff;
 }
 
-/* Custom scrollbars for data tables and panels */
+/* Custom scrollbars for clean light aesthetic */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(31, 25, 44, 0.7);
+  background: rgba(226, 230, 236, 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(60, 50, 83, 0.9);
+  background: rgba(155, 160, 171, 0.7);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 69, 69, 0.7);
+  background: rgba(255, 69, 69, 0.8);
 }
