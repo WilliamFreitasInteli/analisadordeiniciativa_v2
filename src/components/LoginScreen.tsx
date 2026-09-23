@@ -6,14 +6,8 @@ import { useAuth } from '../context/AuthContext.tsx';
 export const LoginScreen: React.FC = () => {
   const { signInWithGoogle, error, clearError, isLoading } = useAuth();
   const [emailInput, setEmailInput] = useState('');
-  const [isCustomInputOpen, setIsCustomInputOpen] = useState(false);
 
-  const handleQuickGoogleSignIn = async () => {
-    clearError();
-    await signInWithGoogle('william.freitas@inteli.edu.br');
-  };
-
-  const handleCustomSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput.trim()) return;
     await signInWithGoogle(emailInput.trim());
@@ -68,13 +62,31 @@ export const LoginScreen: React.FC = () => {
               </div>
             )}
 
-            {/* Primary Google Login Button */}
-            <div className="space-y-3 pt-2">
+            {/* Institutional Sign-In Form */}
+            <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+              <div>
+                <label className="block text-xs font-bold text-[#2e2640] mb-1.5 uppercase tracking-wide font-mono">
+                  Seu E-mail Institucional Inteli:
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    required
+                    placeholder="seu.nome@inteli.edu.br"
+                    value={emailInput}
+                    onChange={(e) => {
+                      clearError();
+                      setEmailInput(e.target.value);
+                    }}
+                    className="w-full bg-[#f8f9fc] border border-[#d8dce6] rounded-2xl px-4 py-3 text-sm text-[#2e2640] placeholder-[#9ba0ab] focus:outline-none focus:ring-2 focus:ring-[#ff4545] focus:border-[#ff4545] transition"
+                  />
+                </div>
+              </div>
+
               <button
-                type="button"
-                onClick={handleQuickGoogleSignIn}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-2xl bg-[#2e2640] hover:bg-[#1f192c] text-white font-semibold text-sm transition shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer"
+                type="submit"
+                disabled={isLoading || !emailInput.trim()}
+                className="w-full flex items-center justify-center gap-3 py-3.5 px-6 rounded-2xl bg-[#2e2640] hover:bg-[#1f192c] text-white font-semibold text-sm transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {/* Google 'G' Icon */}
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -96,8 +108,9 @@ export const LoginScreen: React.FC = () => {
                   />
                 </svg>
                 <span>
-                  {isLoading ? 'Conectando...' : 'Entrar com Google Inteli'}
+                  {isLoading ? 'Autenticando credenciais...' : 'Validar & Acessar com Conta Inteli'}
                 </span>
+                <ArrowRight className="w-4 h-4 ml-1" />
               </button>
 
               {/* Allowed Domains Badge */}
@@ -114,47 +127,7 @@ export const LoginScreen: React.FC = () => {
                   </span>
                 </div>
               </div>
-            </div>
-
-            {/* Alternative custom email input for testing different accounts */}
-            <div className="pt-2 border-t border-[#e2e5ec]">
-              {!isCustomInputOpen ? (
-                <button
-                  type="button"
-                  onClick={() => setIsCustomInputOpen(true)}
-                  className="w-full text-center text-xs text-[#555065] hover:text-[#2e2640] transition underline"
-                >
-                  Entrar com outro e-mail institucional específico
-                </button>
-              ) : (
-                <form onSubmit={handleCustomSignIn} className="space-y-3 pt-2">
-                  <label className="block text-xs font-semibold text-[#555065]">
-                    Insira seu e-mail institucional (@inteli.edu.br ou @prof.inteli.edu.br):
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="email"
-                      required
-                      placeholder="seu.nome@inteli.edu.br"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      className="flex-1 bg-[#f8f9fc] border border-[#d8dce6] rounded-xl px-3.5 py-2 text-xs text-[#2e2640] placeholder-[#9ba0ab] focus:outline-none focus:ring-2 focus:ring-[#ff4545] focus:border-[#ff4545]"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#ff4545] hover:bg-[#e03232] text-white transition flex items-center gap-1.5 shadow-sm shrink-0"
-                    >
-                      <span>Validar</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-[#6c657e]">
-                    E-mails de domínios públicos (ex: @gmail.com, @hotmail.com) serão sumariamente rejeitados.
-                  </p>
-                </form>
-              )}
-            </div>
+            </form>
 
             {/* Security checklist footer */}
             <div className="pt-2 grid grid-cols-2 gap-2 text-[11px] text-[#6c657e]">

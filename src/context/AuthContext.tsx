@@ -31,12 +31,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Restore saved session on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as InteliUser;
         if (isDomainAllowed(parsed.email)) {
           setUser(parsed);
         } else {
+          sessionStorage.removeItem(STORAGE_KEY);
           localStorage.removeItem(STORAGE_KEY);
         }
       }
@@ -48,67 +49,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const isDomainAllowed = (email: string): boolean => {
+    if (!email || !email.includes('@')) return false;
     const cleanEmail = email.trim().toLowerCase();
-    return ALLOWED_DOMAINS.some(
-      (dom) => cleanEmail.endsWith(`@${dom}`) || cleanEmail.endsWith(`.${dom}`)
-    );
+    const domain = cleanEmail.split('@')[1];
+    return ALLOWED_DOMAINS.includes(domain);
   };
 
   const determineRole = (email: string): InteliUser['role'] => {
     const clean = email.toLowerCase();
-    if (clean.includes('@prof.inteli.edu.br')) {
+    if (clean.endsWith('@prof.inteli.edu.br')) {
       return 'Docente / Professor';
     }
-    if (clean.includes('@aluno.inteli.edu.br')) {
+    if (clean.endsWith('@aluno.inteli.edu.br')) {
       return 'Estudante / Aluno';
     }
     return 'Colaborador / Coordenação';
   };
 
-  const signInWithGoogle = async (customEmail?: string): Promise<boolean> => {
+  const processAuthenticatedUser = (userData: { email: string; name?: string; avatar?: string }): boolean => {
+    const targetEmail = userData.email.trim().toLowerCase();
+
+    if (!isDomainAllowed(targetEmail)) {
+      const domain = targetEmail.includes('@') ? targetEmail.split('@')[1] : 'desconhecido';
+      setError(
+        `Acesso negado para "@${domain}". Somente contas institucionais do Inteli (@inteli.edu.br ou @prof.inteli.edu.br) possuem autorização de acesso.`
+      );
+      setUser(null);
+      sessionStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+      return false;
+    }
+
+    const emailPrefix = targetEmail.split('@')[0];
+    const formattedName = userData.name || emailPrefix
+      .split('.')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+
+    const domain = targetEmail.split('@')[1];
+    const newUser: InteliUser = {
+      name: formattedName || 'Usuário Inteli',
+      email: targetEmail,
+      domain: `@${domain}`,
+      role: determineRole(targetEmail),
+      avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formattedName)}&backgroundColor=2e2640&textColor=ffffff`,
+    };
+
+    setUser(newUser);
+    setError(null);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
+    return true;
+  };
+
+  const signInWithGoogle = async (providedEmail?: string): Promise<boolean> => {
     setError(null);
     setIsLoading(true);
 
     try {
-      let targetEmail = customEmail?.trim().toLowerCase();
-
-      // If no custom email is given, try to read from Google Identity Services or prompt
-      if (!targetEmail) {
-        // Check if user has Google session or prompt prompt/default
-        targetEmail = 'william.freitas@inteli.edu.br';
-      }
-
-      if (!isDomainAllowed(targetEmail)) {
-        const attemptedDomain = targetEmail.includes('@')
-          ? targetEmail.split('@')[1]
-          : 'desconhecido';
-        setError(
-          `Domínio "@${attemptedDomain}" não autorizado. O acesso é exclusivo para pessoas com e-mail institucional do Inteli (@inteli.edu.br ou @prof.inteli.edu.br).`
-        );
+      if (!providedEmail || !providedEmail.trim()) {
+        setError('Por favor, informe seu e-mail institucional do Inteli.');
         setIsLoading(false);
         return false;
       }
 
-      // Format name nicely from email prefix
-      const emailPrefix = targetEmail.split('@')[0];
-      const formattedName = emailPrefix
-        .split('.')
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ');
-
-      const domain = targetEmail.split('@')[1];
-      const newUser: InteliUser = {
-        name: formattedName || 'Usuário Inteli',
-        email: targetEmail,
-        domain: `@${domain}`,
-        role: determineRole(targetEmail),
-        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formattedName)}&backgroundColor=2e2640&textColor=ffffff`,
-      };
-
-      setUser(newUser);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
+      const success = processAuthenticatedUser({ email: providedEmail.trim() });
       setIsLoading(false);
-      return true;
+      return success;
     } catch (err: any) {
       console.error('Erro na autenticação:', err);
       setError(err.message || 'Falha ao autenticar com a conta Google Inteli.');
@@ -120,6 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = () => {
     setUser(null);
     setError(null);
+    sessionStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_KEY);
   };
 
