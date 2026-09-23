@@ -327,7 +327,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           <div className="flex items-center justify-between mb-2">
             <span className="text-[11px] font-bold text-[#555065] uppercase tracking-wider flex items-center gap-1.5 font-mono">
               <Sparkles className="w-3 h-3 text-[#ff4545]" />
-              Casos Reais para Demonstração:
+              Exemplo / estrutura de casos reais para demonstração:
             </span>
             <button
               onClick={onOpenKnowledgeBase}
@@ -339,7 +339,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {SAMPLE_BRIEFINGS.map((preset) => (
+            {SAMPLE_BRIEFINGS.slice(0, 2).map((preset) => (
               <button
                 key={preset.id}
                 type="button"

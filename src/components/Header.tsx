@@ -1,6 +1,7 @@
 import React from 'react';
-import { Sparkles, BookOpen, Layers, CheckCircle2 } from 'lucide-react';
+import { Sparkles, BookOpen, Layers, CheckCircle2, LogOut, User } from 'lucide-react';
 import { InteliLogo } from './InteliBrand.tsx';
+import { useAuth } from '../context/AuthContext.tsx';
 
 interface HeaderProps {
   activeTab: 'matchmaking' | 'catalog' | 'history';
@@ -13,6 +14,7 @@ export const Header: React.FC<HeaderProps> = ({
   setActiveTab,
   modulesCount,
 }) => {
+  const { user, signOut } = useAuth();
   return (
     <header className="border-b border-[#d8dce6] bg-white/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,12 +68,39 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </nav>
 
-          {/* Official Academic Status Badge */}
-          <div className="hidden xl:flex items-center gap-2 text-xs text-[#555065] border-l border-[#d8dce6] pl-4">
-            <div className="flex items-center gap-1.5 text-[#066d73] bg-[#89cea5]/20 px-3 py-1 rounded-full border border-[#89cea5]/40">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#066d73]" />
-              <span className="font-semibold text-[11px]">Brandbook 2025 • Base Oficial</span>
-            </div>
+          {/* Authenticated User & Logout */}
+          <div className="flex items-center gap-2.5 border-l border-[#d8dce6] pl-4">
+            {user && (
+              <div className="flex items-center gap-2">
+                <div className="hidden lg:flex flex-col text-right">
+                  <span className="text-xs font-bold text-[#2e2640] truncate max-w-[150px]">
+                    {user.name}
+                  </span>
+                  <span className="text-[10px] font-mono text-[#066d73] bg-[#89cea5]/20 px-1.5 py-0.2 rounded border border-[#89cea5]/30 self-end">
+                    {user.domain}
+                  </span>
+                </div>
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full border border-[#d8dce6] shrink-0"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#edeef4] text-[#2e2640] flex items-center justify-center font-bold text-xs border border-[#d8dce6]">
+                    <User className="w-4 h-4 text-[#555065]" />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={signOut}
+                  className="p-1.5 rounded-lg text-[#555065] hover:text-[#e03232] hover:bg-rose-50 transition"
+                  title="Sair da conta"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

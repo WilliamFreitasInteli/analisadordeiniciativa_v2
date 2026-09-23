@@ -5,6 +5,8 @@ import { ResultsView } from './components/ResultsView.tsx';
 import { KnowledgeBaseExplorer } from './components/KnowledgeBaseExplorer.tsx';
 import { RefinementModal } from './components/RefinementModal.tsx';
 import { InteliLogo, InteliPillarsGraphic, InteliSymbol } from './components/InteliBrand.tsx';
+import { LoginScreen } from './components/LoginScreen.tsx';
+import { AuthProvider, useAuth } from './context/AuthContext.tsx';
 import { MatchmakingResult, InitiativeMatch } from './types.ts';
 import { INTELI_MODULES_CATALOG } from './data/inteliKnowledgeBase.ts';
 import {
@@ -25,7 +27,8 @@ import {
   Compass
 } from 'lucide-react';
 
-export default function App() {
+function MatchMakerApp() {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'matchmaking' | 'catalog' | 'history'>('matchmaking');
   const [matchResult, setMatchResult] = useState<MatchmakingResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +36,21 @@ export default function App() {
   const [lastPayload, setLastPayload] = useState<any>(null);
   const [refinementInitiative, setRefinementInitiative] = useState<InitiativeMatch | null>(null);
   const [catalogFilterName, setCatalogFilterName] = useState<string | null>(null);
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#f4f6f9] flex flex-col items-center justify-center gap-4">
+        <InteliLogo theme="light" showSignature={false} size="md" />
+        <p className="text-xs text-[#555065] font-mono animate-pulse">
+          Verificando credenciais institucionais Inteli...
+        </p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
 
   const cleanErrorMessage = (raw: string): string => {
     if (!raw) return 'Ocorreu um erro ao conectar com o serviço de IA. Tente novamente.';
@@ -211,11 +229,13 @@ export default function App() {
                         </span>
                       </div>
 
-                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#2e2640] tracking-tight leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+                      {/* Título com fonte reduzida conforme solicitação */}
+                      <h2 className="text-xl sm:text-2xl font-bold text-[#2e2640] tracking-tight leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
                         Formar a geração que vai transformar o futuro.
                       </h2>
 
-                      <p className="text-sm sm:text-base text-[#555065] leading-relaxed">
+                      {/* Texto abaixo com fonte reduzida */}
+                      <p className="text-xs sm:text-sm text-[#555065] leading-relaxed">
                         Analise desafios propostos por parceiros corporativos e realize o <strong className="text-[#2e2640]">matchmaking multi-cenários</strong> com os módulos e metaprojetos do Inteli. Avalie prós, contras e calibragens de escopo em qualquer formato (áudio, texto, planilhas ou PDFs).
                       </p>
 
@@ -301,9 +321,19 @@ export default function App() {
             <span className="hover:text-[#066d73] transition">Engenharia de Computação</span>
             <span>•</span>
             <span className="hover:text-[#ff4545] transition">Sistemas de Informação</span>
+            <span>•</span>
+            <span className="hover:text-[#e03232] transition font-semibold text-[#2e2640]">ADM Tech (Administração)</span>
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MatchMakerApp />
+    </AuthProvider>
   );
 }
