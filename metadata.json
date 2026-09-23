@@ -1,0 +1,6 @@
+{
+  "name": "Inteli MatchMaker - Assistente de Coordenação de Projetos",
+  "description": "Assistente multimodal para análise de desafios de parceiros corporativos e matchmaking com metaprojetos e módulos dos cursos de graduação do Inteli.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

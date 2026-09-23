@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Platypi', 'Manrope', Georgia, serif;
+  --font-mono: 'Space Mono', monospace;
+
+  /* Inteli Brandbook 2025 Official Colors */
+  --color-inteli-purple: #2e2640;
+  --color-inteli-purple-dark: #1b1626;
+  --color-inteli-purple-card: #251f33;
+  --color-inteli-purple-border: #3c3253;
+  --color-inteli-coral: #ff4545;
+  --color-inteli-coral-dark: #e03232;
+  --color-inteli-coral-light: #ff7575;
+  --color-inteli-lilac: #90a5e5;
+  --color-inteli-green: #89cea5;
+  --color-inteli-green-dark: #066d73;
+  --color-inteli-gray-dark: #b2b6bf;
+  --color-inteli-gray-mid: #caced6;
+  --color-inteli-gray-light: #e6eaeb;
+  --color-inteli-white: #ffffff;
+}
+
+/* Custom scrollbars for data tables and panels */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(31, 25, 44, 0.7);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(60, 50, 83, 0.9);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 69, 69, 0.7);
+}
