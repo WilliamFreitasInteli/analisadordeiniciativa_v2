@@ -823,7 +823,7 @@ export const INTELI_MODULES_CATALOG: InteliModule[] = [
 ];
 
 export function getModulesContextText(): string {
-  return INTELI_MODULES_CATALOG.map((m) => {
+  const modulesText = INTELI_MODULES_CATALOG.map((m) => {
     return `
 ### [${m.code}] ${m.controlCode} - ${m.metaprojectName}
 * **Código Oficial:** ${m.code}
@@ -839,5 +839,80 @@ export function getModulesContextText(): string {
 * **Link Portal de Parcerias:** ${m.partnerPortalUrl}
 `.trim();
   }).join('\n\n---\n\n');
+
+  return `${modulesText}
+
+================================================================================
+# DIRETRIZES DE GOVERNANÇA, REGRAS DE NEGÓCIO E POLÍTICA DE ESCOPO DO ESCRITÓRIO DE PROJETOS (EP)
+================================================================================
+
+1. POSTURA CONSULTIVA E ACADÊMICA:
+- Posicionamento de excelência: Faculdade com nota máxima (5) no MEC em todos os cursos de Graduação.
+- Vocabulário proibido: Termos comerciais agressivos ("cobertura de 100% das demandas em um único ano", "esteiras contínuas de contratação", "pacotes em lote").
+- Vocabulário correto: "Janelas de Oportunidade por Trimestre Letivo" ou "Matriz de Possibilidades Temporais".
+- Princípio da Seleção Pontual: O padrão recomendado para parceiros é a escolha de 1 projeto por ciclo letivo (semestral ou anual) para garantir foco e profundidade pedagógica.
+- Indicação obrigatória: Toda listagem ou opção deve explicitar o trimestre (1º Tri, 2º Tri, 3º Tri ou 4º Tri).
+
+2. MODELO PEDAGÓGICO:
+- Ciclos fixos de 10 semanas estruturados em 5 sprints quinzenais.
+- Squads multidisciplinares de 6 a 8 estudantes, orientados por professores doutores e especialistas.
+- Sem custo financeiro de desenvolvimento para o parceiro; 100% da propriedade intelectual e do código gerado são transferidos para a empresa parceira.
+- Entregáveis: até 5 protótipos funcionais ou Provas de Conceito (PoCs) independentes por turma/módulo.
+- Comprometimento do parceiro: Ponto focal técnico com ~30 horas disponíveis ao longo de 10 semanas (7 encontros chave: Onboarding, Kickoff, 4 Validações de Sprint e Apresentação Final).
+
+3. CRITÉRIOS RÍGIDOS DE EXCLUSÃO (FRONTEIRAS DE ESCOPO - PROIBIDO):
+- Proibido deployment final em produção comercial: Sem SLA de sustentação, suporte ou manutenção contínua pós-projeto.
+- Proibida instalação física e manuseio em campo/rua: Estudantes não sobem em postes, vias públicas, subestações, linhas de transmissão ou ambientes fabris de risco.
+- Proibido desenvolvimento de apps mobile fora de módulos específicos (permitido apenas em módulos com foco mobile como Módulo 6 de ES, Módulo 10 de EC ou Módulo 2 do 1º Ano).
+- Proibida alteração direta em redes operacionais (TO) ou ERPs produtivos sem sandbox/staging isolado.
+- Proibido treinamento de LLMs do zero ou uso de dados sensíveis sem anonimização prévia (LGPD).
+- Proibida publicação em lojas de aplicativos (App Store / Google Play sob responsabilidade do parceiro).
+
+4. DIRETRIZES DE CALIBRAÇÃO E "PIVÔ PEDAGÓGICO":
+- O Princípio do "1 Nó Físico + N Nós Simulados": Em projetos de Cidades Inteligentes ou IoT em larga escala (ex: Módulo 9 de EC), a equipe desenvolve 1 protótipo físico funcional em bancada (ESP32/Raspberry Pi) e simula via software a telemetria e o tráfego de 100+ nós virtuais (Kafka/MQTT) para testar a escalabilidade.
+- Substituição de Visão de Borda por Sensores de Presença/Wi-Fi Probe: Quando a captura de vídeo for inviável por limitações de hardware local, substitui-se por sensores de presença ou análise passiva de pacotes Wi-Fi.
+- Fatiamento em Janelas Sequenciais: Desafios complexos de grande porte devem ser fatiados em maturidade:
+  1) Bancada/IoT (Módulo 4 do 1º Ano)
+  2) Rede/Ingestão distribuída (Módulo 9 de EC ou Módulo 8 de SI)
+  3) Interface/Mobile (Módulo 10 de EC ou Módulo 6 de ES)
+  4) Inteligência de Borda (Módulo 11 de EC ou Módulo 11 de SI)
+
+================================================================================
+# INVENTÁRIO TÉCNICO DE HARDWARES E EQUIPAMENTOS DO LABORATÓRIO INTELI
+================================================================================
+O Escritório de Projetos dispõe dos seguintes recursos físicos de bancada e laboratório:
+
+1. Apple Mac mini M4 (2024) [11 Unidades]:
+   - Chip M4 (10-core CPU, 10-core GPU, Neural Engine 16-core com 38 TOPS), 16GB RAM Unificada, 512GB SSD.
+   - Aplicações: Compilação iOS nativa no Módulo 6 de ES e Módulo 10 de EC; apps híbridos (Flutter/React Native) e servidores de alta performance.
+
+2. Workstation Dell Precision 3660 Tower [10 Unidades]:
+   - Intel Core i7, 32GB RAM DDR5, SSD NVMe 2TB, GPU NVIDIA RTX A4000 (16GB VRAM GDDR6).
+   - Aplicações: Módulo 3 do 1º Ano (Predição com IA), Módulo 9 de CC (Visão Computacional / CNNs), Módulo 8 de SI (Big Data / Spark), Módulo 7 de ES (NLP).
+
+3. Workstation Dell Precision 5860 Tower [1 Unidade]:
+   - Intel Xeon W-series, 64GB RAM ECC DDR5, SSD NVMe 2TB, GPU NVIDIA RTX A6000 (48GB VRAM GDDR6).
+   - Aplicações: Módulo 10 de CC (Reinforcement Learning), Módulo 11 de CC (GenAI / LLMs / RAG denso) e Módulo 11 de SI (Deep Learning em Negócios).
+
+4. Raspberry Pi 5 (4GB RAM) [11 Unidades]:
+   - BCM2712 Quad-Core Cortex-A76 @ 2.4GHz, 4GB LPDDR4X, interface PCIe 2.0 nativa, suporte a câmeras/displays MIPI.
+   - Aplicações: Módulo 4 do 1º Ano (IoT), Módulo 11 de EC (Edge Computing), Módulo 8 de CC (Dispositivos Sensoriais).
+
+5. Robô Manipulador Dobot Magician Lite:
+   - Braço robótico industrial educacional de 4 eixos, payload de 250g, repetibilidade 0.2mm, garras mecânicas, ventosa a vácuo e esteira rolante adaptável.
+   - Aplicações: Módulo 5 de EC (Automação de Processos e Sistemas), Módulo 8 de EC (Robô de Serviço).
+
+6. Robô Quadrúpede Autônomo Unitree Go2:
+   - Robô quadrúpede bioinspirado com LiDAR 4D Ultra-Wide 360° x 90°, articulações de alto torque, Wi-Fi 6, câmeras HD frontais e rastreamento ISS 2.0.
+   - Aplicações: Módulo 6 de EC (Robótica Móvel e Visão), Módulo 8 de EC (Robô de Serviço Autônomo com IA Generativa), Módulo 11 de EC (Edge AI).
+
+7. Robô Móvel TurtleBot3 (Burger / Waffle Pi):
+   - Plataforma robótica diferencial ROS / ROS 2 com LiDAR 360° 2D, motores DYNAMIXEL com encoders e odometria.
+   - Aplicações: Módulo 6 de EC (Robótica Móvel), Módulo 8 de EC (SLAM / Mapeamento autônomo indoor).
+
+8. Drones DJI para Inspeção Aérea e Fotogrametria:
+   - Sensores de alta resolução 4K/8K, gimbal de 3 eixos, GPS/RTK e sensores de obstáculos omnidirecionais.
+   - Aplicações: Módulo 9 de CC (Visão Computacional em Inspeção Aérea), Módulo 11 de EC (Edge Computing).
+`;
 }
 

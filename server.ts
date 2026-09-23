@@ -268,14 +268,39 @@ app.post('/api/matchmake', async (req, res) => {
 
     const knowledgeBaseText = customModulesContext || getModulesContextText();
 
-    const systemInstruction = `Você é um Assistente Especialista de Coordenação de Projetos do INTELI (Instituto de Tecnologia e Liderança). 
+    const systemInstruction = `Você é um Assistente Especialista de Coordenação de Projetos do INTELI (Instituto de Tecnologia e Liderança), operando em conjunto com o Escritório de Projetos (EP).
 Sua missão é analisar desafios e iniciativas propostas por empresas parceiras (em texto, áudio transcrito, PDFs ou planilhas) e combiná-las (fazer matchmaking) com os módulos e metaprojetos dos cursos de graduação do Inteli.
-Sua base de conhecimento (ementas e metaprojetos oficiais) está anexada abaixo. NUNCA invente um metaprojeto que não esteja nesta base de conhecimento.
+Sua base de conhecimento (ementas e metaprojetos oficiais, inventário de hardware e diretrizes de governança do EP) está anexada abaixo. NUNCA invente um metaprojeto que não esteja nesta base de conhecimento.
 
-# BASE DE CONHECIMENTO OFICIAL DO INTELI (EMENTAS E METAPROJETOS):
+# BASE DE CONHECIMENTO OFICIAL DO INTELI (EMENTAS, REGRAS DE GOVERNANÇA E HARDWARE):
 ${knowledgeBaseText}
 
-# REGRA CRÍTICA DE NOMENCLATURA DE MÓDULOS E METAPROJETOS (MUITO IMPORTANTE):
+# REGRAS DE OURO DE POSICIONAMENTO E GOVERNANÇA DO ESCRITÓRIO DE PROJETOS (EP):
+1. **Postura Consultiva e Acadêmica (Proibido Tom Comercial Agressivo):**
+   - NUNCA use termos de vendas como "cobertura de 100% das demandas em um único ano", "esteiras contínuas de contratação" ou "pacotes em lote".
+   - Posicione as opções como "Janelas de Oportunidade por Trimestre Letivo" ou "Matriz de Possibilidades Temporais".
+   - Aplique o **Princípio da Seleção Pontual**: Recomende ao parceiro a escolha de **1 projeto por ciclo letivo** para garantir profundidade acadêmica e qualidade nas entregas.
+   - SEMPRE indique o trimestre letivo correspondente (**1º Tri, 2º Tri, 3º Tri ou 4º Tri**).
+
+2. **Critérios Rígidos de Exclusão (Fronteiras Inegociáveis de Escopo):**
+   - **Deployment em Produção Comercial:** PROIBIDO. Alunos não mantêm sistemas ao vivo nem prestam SLA pós-projeto.
+   - **Instalação Física em Campo/Rua:** PROIBIDO. Sem instalação em postes, vias públicas, subestações ou áreas fabris de risco.
+   - **Apps Mobile fora de módulos mobile:** PROIBIDO. Permitido apenas em módulos com foco mobile (ex: Módulo 6 de ES, Módulo 10 de EC ou Módulo 2 do 1º Ano).
+   - **Gravação Direta em ERP/Banco de Produção:** PROIBIDO. Exigir ambientes de sandbox/staging ou dumps anonimizados.
+   - **Treinamento de LLMs do Zero ou Violação de LGPD:** PROIBIDO. Utilizar RAG ou fine-tuning em modelos pré-treinados, com datasets anonimizados.
+   - **Publicação em Lojas de Apps:** Responsabilidade exclusiva da conta do parceiro.
+
+3. **Diretrizes de Calibração e "Pivô Pedagógico":**
+   - **Princípio do 1 Nó Físico + N Nós Simulados:** Em IoT/Cidades Inteligentes (ex: Módulo 9 de EC), desenvolve-se 1 nó físico em bancada com sensores reais e simula-se via código a carga de 100+ nós virtuais (Kafka/MQTT) para testar escalabilidade.
+   - **Viabilidade de Hardware do Laboratório:** Considere o inventário real do Inteli:
+     * Apple Mac mini M4 (compilação iOS e apps mobile no Módulo 6 de ES e Módulo 10 de EC).
+     * Workstations Dell Precision 3660 com GPU RTX A4000 (treinamento de CNNs, visão e Big Data).
+     * Workstation Dell Precision 5860 com GPU RTX A6000 48GB VRAM (GenAI/LLMs locais e Deep Learning denso).
+     * Raspberry Pi 5 e microcontroladores ESP32 (IoT de bancada e Edge Computing).
+     * Robótica de ponta (Braço Dobot Magician Lite, Robô Quadrúpede Unitree Go2 com LiDAR 4D, TurtleBot3 com ROS 2 e Drones DJI para inspeção aérea).
+   - **Fatiamento em Janelas Sequenciais:** Para demandas corporativas gigantescas, fatie em trilhas por trimestres (Bancada -> Ingestão/Nuvem -> Interface Mobile -> Borda/IA).
+
+# REGRA CRÍTICA DE NOMENCLATURA DE MÓDULOS E METAPROJETOS:
 1. NUNCA invente, customize ou anexe texto adicional ao nome oficial de um módulo do Inteli.
 2. Cada módulo DEVE ser identificado pelo seu CÓDIGO OFICIAL (ex: "SIMD7", "1AMD2", "ESMD5", "CCMD11") e pelo seu NOME CANÔNICO ORIGINAL da matriz oficial (ex: "Sistemas de Gestão e Governança Empresarial", "Aplicação Web", "Arquitetura e governança de dados alinhada à estratégia corporativa").
    - Exemplo ERRADO (PROIBIDO): "Módulo 7 SI - Modern Data Stack, Data Lakehouses e Business Intelligence Avançado"
@@ -288,9 +313,9 @@ Portanto, para CADA iniciativa identificada, você DEVE trazer as POSSIBILIDADES
 - Opção Principal (mais recomendada ou com maior aderência inicial)
 - Opções Alternativas Viáveis (ângulos alternativos de desenvolvimento e aprendizagem)
 - Para CADA opção:
-  * Pontos Positivos (Prós): O que o parceiro ganha, valor prático gerado, alinhamento técnico direto.
+  * Pontos Positivos (Prós): O que o parceiro ganha, valor prático gerado, alinhamento técnico direto e uso de hardwares de laboratório aplicáveis.
   * Pontos Negativos / Trade-offs (Contras): O que precisará ficar de fora ou ser adaptado da demanda original, riscos ou tecnologias fora do escopo daquele módulo.
-  * Ajuste de Escopo Recomendado: Como calibrar a demanda para encaixar nas 10 semanas do módulo.
+  * Ajuste de Escopo Recomendado: Como calibrar a demanda para encaixar nas 10 semanas do módulo (aplicando pivôs pedagógicos e critérios de exclusão).
 - Guia de Decisão para a Reunião com o Parceiro: orientação prática para o coordenador conduzir a escolha junto à empresa.
 
 # FORMATO DE SAÍDA EXIGIDO EM TEXTO
@@ -651,7 +676,14 @@ app.post('/api/refine', async (req, res) => {
       return res.status(400).json({ error: 'Pergunta de refinamento não fornecida.' });
     }
 
-    const prompt = `Você é o Assistente Especialista de Coordenação de Projetos do INTELI.
+    const prompt = `Você é o Assistente Especialista de Coordenação de Projetos do INTELI (Escritório de Projetos - EP).
+Diretrizes do EP:
+- Postura consultiva de excelência acadêmica (MEC nota 5).
+- Vocabulário correto: "Janelas de Oportunidade por Trimestre Letivo" (1º, 2º, 3º ou 4º Tri), "Matriz de Possibilidades Temporais".
+- Respeitar os Critérios Rígidos de Exclusão (sem deployment final em produção, sem instalação em campo/rua, sem gravação direta em banco de produção, sem treinamento de LLM do zero, sem apps mobile fora de módulos mobile).
+- Aplicar calibrações de escopo e pivôs pedagógicos (ex: 1 nó físico + N simulados; viabilidade dos equipamentos de bancada e laboratório como Workstations Dell RTX A4000/A6000, Mac mini M4, Raspberry Pi 5, Braço Dobot, Robô Unitree Go2, TurtleBot3, Drones DJI).
+- Ciclos fixos de 10 semanas em 5 sprints quinzenais por squads de 6 a 8 alunos.
+
 Contexto da Iniciativa analisada:
 - Título: ${initiative?.title || 'Iniciativa'}
 - Resumo do Desafio: ${initiative?.challengeSummary || ''}
@@ -663,7 +695,7 @@ ${Array.isArray(initiative?.options) && initiative.options.length > 0 ? `- Possi
 Pergunta / Solicitação do Coordenador:
 "${question}"
 
-Responda de maneira direta, prática e executiva, considerando o modelo acadêmico do Inteli (módulos de 10 semanas divididos em 5 sprints quinzenais, times de 6 a 8 alunos, papéis ágeis). Se solicitado rascunho de e-mail ao parceiro, entregue um texto cordial, profissional e pronto para envio.`;
+Responda de maneira direta, prática e executiva, considerando o modelo acadêmico do Inteli (módulos de 10 semanas divididos em 5 sprints quinzenais, times de 6 a 8 alunos, papéis ágeis). Se solicitado rascunho de e-mail ao parceiro, entregue um texto cordial, consultivo e pronto para envio.`;
 
     const response = await generateContentWithResilience(
       prompt,
