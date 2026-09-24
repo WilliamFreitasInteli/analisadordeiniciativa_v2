@@ -9,7 +9,7 @@ import { SubmissionsHistoryModal } from './components/SubmissionsHistoryModal.ts
 import { InteliLogo, InteliPillarsGraphic, InteliSymbol } from './components/InteliBrand.tsx';
 import { LoginScreen } from './components/LoginScreen.tsx';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
-import { MatchmakingResult, InitiativeMatch, ModuleOption } from './types.ts';
+import { MatchmakingResult, InitiativeMatch, ModuleOption, SubmissionProponentInfo } from './types.ts';
 import { INTELI_MODULES_CATALOG, InteliModule } from './data/inteliKnowledgeBase.ts';
 import {
   Sparkles,
@@ -47,6 +47,7 @@ function MatchMakerApp() {
     isOpen: boolean;
     initiative?: InitiativeMatch;
     defaultOption?: ModuleOption | null;
+    initialProponent?: Partial<SubmissionProponentInfo>;
   }>({ isOpen: false });
   const [submissionsCount, setSubmissionsCount] = useState<number>(0);
 
@@ -203,6 +204,7 @@ function MatchMakerApp() {
       isOpen: true,
       initiative,
       defaultOption: defaultOption || null,
+      initialProponent: matchResult?.extractedProponent,
     });
   };
 
@@ -212,6 +214,7 @@ function MatchMakerApp() {
       isOpen: true,
       initiative: initiatives[0],
       defaultOption: null,
+      initialProponent: matchResult?.extractedProponent,
     });
   };
 
@@ -267,31 +270,6 @@ function MatchMakerApp() {
         modulesCount={INTELI_MODULES_CATALOG.length}
         submissionsCount={submissionsCount}
       />
-
-      {/* Inteli Academic DNA Bar */}
-      <div className="bg-white border-b border-[#d8dce6] py-2.5 px-4 shadow-2xs">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs text-[#555065]">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            <span className="flex items-center gap-1.5 font-medium text-[#2e2640]">
-              <Calendar className="w-3.5 h-3.5 text-[#ff4545]" />
-              Módulos de 10 Semanas • 5 Sprints Quinzenais
-            </span>
-            <span className="flex items-center gap-1.5 font-medium text-[#2e2640]">
-              <Users className="w-3.5 h-3.5 text-[#364f99]" />
-              Times de 6 a 8 Alunos Multidisciplinares
-            </span>
-            <span className="flex items-center gap-1.5 font-medium text-[#2e2640]">
-              <Target className="w-3.5 h-3.5 text-[#066d73]" />
-              100% Desafios Reais com Empresas Parceiras
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#066d73] bg-[#89cea5]/20 px-2.5 py-0.5 rounded-full border border-[#89cea5]/40">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#066d73]" />
-            <span>Fidelidade às Ementas do Inteli</span>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
@@ -355,40 +333,39 @@ function MatchMakerApp() {
 
                   <div className="flex flex-col lg:flex-row items-center justify-between gap-8 relative">
                     {/* Left: Inteli Narrative */}
-                    <div className="max-w-2xl space-y-3.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#ff4545]/10 text-[#e03232] border border-[#ff4545]/25">
-                          <Sparkles className="w-3.5 h-3.5 text-[#ff4545]" />
-                          Assistente de Coordenação • Brandbook 2025
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#f0f2f8] text-[#364f99] border border-[#d8dce6]">
-                          Tecnologia • Negócios • Liderança
-                        </span>
+                    <div className="max-w-2xl space-y-3">
+                      <div className="flex items-center gap-2 text-xs text-[#6c657e] font-mono">
+                        <span className="font-semibold text-[#ff4545]">INTELI</span>
+                        <span aria-hidden="true">·</span>
+                        <span>Coordenação de Projetos & Parcerias</span>
                       </div>
 
-                      {/* Título com fonte reduzida conforme solicitação */}
-                      <h2 className="text-xl sm:text-2xl font-bold text-[#2e2640] tracking-tight leading-tight" style={{ fontFamily: 'var(--font-heading)' }}>
-                        Formar a geração que vai transformar o futuro.
+                      <h2
+                        className="text-xl sm:text-2xl font-bold text-[#2e2640] tracking-tight leading-tight"
+                        style={{ fontFamily: 'var(--font-heading)' }}
+                      >
+                        Matchmaking de Desafios Corporativos com Metaprojetos
                       </h2>
 
-                      {/* Texto abaixo com fonte reduzida */}
                       <p className="text-xs sm:text-sm text-[#555065] leading-relaxed">
-                        Analise desafios propostos por parceiros corporativos e realize o <strong className="text-[#2e2640]">matchmaking multi-cenários</strong> com os módulos e metaprojetos do Inteli. Avalie prós, contras e calibragens de escopo em qualquer formato (áudio, texto, planilhas ou PDFs).
+                        Analise desafios propostos por parceiros em múltiplos formatos (áudio, texto, planilhas ou documentos) e descubra as melhores opções de módulos da graduação, avaliando aderência, prós e calibragem de escopo para 10 semanas.
                       </p>
 
-                      <div className="pt-2 flex flex-wrap items-center gap-4">
-                        <div className="flex items-center gap-1.5 text-xs text-[#555065]">
-                          <CheckCircle2 className="w-4 h-4 text-[#ff4545]" />
-                          <span>Múltiplas Possibilidades (NotebookLM Style)</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-[#555065]">
-                          <CheckCircle2 className="w-4 h-4 text-[#066d73]" />
-                          <span>Prós, Contras & Trade-offs</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-[#555065]">
-                          <CheckCircle2 className="w-4 h-4 text-[#364f99]" />
-                          <span>Guia de Decisão para o Parceiro</span>
-                        </div>
+                      <div className="pt-1 flex flex-wrap items-center gap-4 text-xs text-[#555065]">
+                        <span className="flex items-center gap-1.5 font-medium text-[#2e2640]">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#ff4545]" />
+                          Multi-cenários & Trade-offs
+                        </span>
+                        <span aria-hidden="true" className="text-[#d8dce6]">·</span>
+                        <span className="flex items-center gap-1.5 font-medium text-[#2e2640]">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#066d73]" />
+                          5 Sprints Quinzenais
+                        </span>
+                        <span aria-hidden="true" className="text-[#d8dce6]">·</span>
+                        <span className="flex items-center gap-1.5 font-medium text-[#2e2640]">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#364f99]" />
+                          Preenchimento Automático
+                        </span>
                       </div>
                     </div>
 
@@ -456,6 +433,7 @@ function MatchMakerApp() {
           initiative={submissionModalState.initiative}
           allInitiatives={matchResult?.initiatives || []}
           defaultModuleOption={submissionModalState.defaultOption}
+          initialProponentInfo={submissionModalState.initialProponent || matchResult?.extractedProponent}
           onClose={() => setSubmissionModalState({ isOpen: false })}
           onSubmissionSuccess={() => {
             fetchSubmissionsCount();

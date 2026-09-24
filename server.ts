@@ -127,6 +127,113 @@ function findModuleInCatalog(
   return undefined;
 }
 
+// Helper to extract or complete proponent contact details from text using regex heuristics
+function extractProponentFromText(
+  text: string,
+  existing?: Partial<{
+    proponentName: string;
+    proponentEmail: string;
+    proponentPhone: string;
+    proponentRole: string;
+    organizationName: string;
+    organizationSector?: string;
+    organizationWebsite?: string;
+  }>
+) {
+  const result = { ...(existing || {}) };
+  if (!text || typeof text !== 'string') return result;
+
+  const clean = (val: string) => (val ? val.trim().replace(/^[:\-–\s]+|[:\-–\s]+$/g, '') : '');
+
+  // 1. Email extraction
+  if (!result.proponentEmail || !result.proponentEmail.includes('@')) {
+    const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (emailMatch) {
+      result.proponentEmail = emailMatch[1].trim();
+    }
+  }
+
+  // 2. Phone / WhatsApp extraction (Brazilian format: (XX) 9XXXX-XXXX or landline)
+  if (!result.proponentPhone) {
+    const phoneMatch = text.match(/(?:(?:\+|00)?55\s?)?(?:\(?([1-9][0-9])\)?\s?)?(?:(9[0-9]{4})|([2-8][0-9]{3}))[-.\s]?([0-9]{4})\b/);
+    if (phoneMatch) {
+      result.proponentPhone = phoneMatch[0].trim();
+    }
+  }
+
+  // 3. Website / URL extraction
+  if (!result.organizationWebsite) {
+    const urlMatch =
+      text.match(/https?:\/\/(?:www\.)?([a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s\),]*)/i) ||
+      text.match(/\b(?:www\.)([a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s\),]*)/i);
+    if (urlMatch) {
+      const u = urlMatch[0].trim();
+      result.organizationWebsite = u.startsWith('http') ? u : `https://${u}`;
+    }
+  }
+
+  // 4. Company / Organization extraction
+  if (!result.organizationName) {
+    const orgPatterns = [
+      /(?:empresa|organização|instituição|cliente|companhia|parceiro|razão social|solicitante)[:\s]+([^\n\r,\.;]{2,60})/i,
+      /(?:da empresa|na empresa|do grupo|no grupo)\s+([A-ZÀ-Ú][a-zA-ZÀ-ú0-9\s&.-]{2,45})/i,
+    ];
+    for (const pat of orgPatterns) {
+      const match = text.match(pat);
+      if (match && match[1] && clean(match[1]).length > 1) {
+        result.organizationName = clean(match[1]);
+        break;
+      }
+    }
+  }
+
+  // 5. Proponent Name extraction
+  if (!result.proponentName) {
+    const namePatterns = [
+      /(?:contato|responsável|proponente|solicitante|nome|autor)[:\s]+([A-ZÀ-Ú][a-zA-ZÀ-ú\s]{2,40})/i,
+      /(?:de|atenciosamente|abraços?|att\.?|grato|obrigado),?\s*\n+([A-ZÀ-Ú][a-zA-ZÀ-ú\s]{2,40})/i,
+    ];
+    for (const pat of namePatterns) {
+      const match = text.match(pat);
+      if (match && match[1] && clean(match[1]).length > 2) {
+        result.proponentName = clean(match[1]);
+        break;
+      }
+    }
+  }
+
+  // 6. Proponent Role extraction
+  if (!result.proponentRole) {
+    const rolePatterns = [
+      /(?:cargo|função|posiç[ãa]o|título)[:\s]+([^\n\r,\.;]{2,40})/i,
+      /\b(diretor[a]?|gerente|coordenador[a]?|head|tech lead|líder|especialista|analista|vp|ceo|cto|cfo|product owner|po|scrum master)\b[^\n\r,\.;]{0,30}/i,
+    ];
+    for (const pat of rolePatterns) {
+      const match = text.match(pat);
+      if (match && match[0]) {
+        result.proponentRole = clean(match[1] ? match[1] : match[0]);
+        break;
+      }
+    }
+  }
+
+  // 7. Organization Sector extraction
+  if (!result.organizationSector) {
+    const sectorPatterns = [
+      /(?:setor|indústria|segmento|área de atuação)[:\s]+([^\n\r,\.;]{2,40})/i,
+    ];
+    for (const pat of sectorPatterns) {
+      const match = text.match(pat);
+      if (match && match[1] && clean(match[1]).length > 2) {
+        result.organizationSector = clean(match[1]);
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
 // Resilient Gemini generateContent caller with generous timeout, exponential backoff and fallback models
 async function generateContentWithResilience(
   contents: any,
@@ -363,6 +470,17 @@ Quando o usuário anexar um arquivo (PDF, Word, Planilha ou Texto) contendo múl
    - "Fora de Escopo Computacional": Demanda que viola as fronteiras inegociáveis (ex: instalação externa em campo, sustentação/SLA ao vivo, suporte comercial contínuo).
 3. Mantenha os resumos executivos e objetivos para garantir tempo de resposta rápido e ágil.
 
+# DIRETRIZ CRÍTICA: IDENTIFICAÇÃO E SEPARAÇÃO DE DADOS DE CONTATO E EMPRESA (PROPONENTE):
+Se no texto, arquivo, planilha ou áudio transcrito houver menção a dados de contato, identificação da empresa ou assinatura:
+- Nome da Empresa / Parceiro Corporativo
+- Nome do Proponente / Contato / Responsável
+- E-mail corporativo ou de contato
+- Telefone / Celular / WhatsApp
+- Cargo / Função do contato
+- Setor de mercado / área de atuação (ex: Saúde, Varejo, Finanças, Logística)
+- Website oficial da empresa
+Você DEVE identificar e separar esses dados com precisão, preenchendo o objeto "extractedProponent" no JSON estruturado. NUNCA misture esses dados pessoais de contato na descrição técnica do desafio. Se algum campo específico não for citado, use string vazia "".
+
 # FORMATO DE SAÍDA EXIGIDO EM TEXTO
 Para CADA iniciativa identificada, estruture a resposta de forma clara e visual:
 
@@ -409,6 +527,15 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
 \`\`\`json:structured
 {
   "totalInitiatives": number,
+  "extractedProponent": {
+    "organizationName": "Nome da empresa identificado no texto",
+    "proponentName": "Nome do contato / proponente",
+    "proponentEmail": "email@empresa.com",
+    "proponentPhone": "(11) 98765-4321",
+    "proponentRole": "Cargo do solicitante",
+    "organizationSector": "Setor de atuação (ex: Saúde, Finanças)",
+    "organizationWebsite": "https://empresa.com.br"
+  },
   "initiatives": [
     {
       "id": "init-1",
@@ -828,6 +955,23 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
       courseDistribution,
     };
 
+    // Extract & consolidate proponent contact information
+    let extractedProponent: any = structuredData?.extractedProponent || {};
+    // Combine text inputs to run heuristic extraction fallback
+    const combinedTextCorpus = [
+      inputContent || '',
+      ...parts.map((p: any) => p.text || ''),
+    ].join('\n\n');
+    extractedProponent = extractProponentFromText(combinedTextCorpus, extractedProponent);
+
+    // If partnerName was passed explicitly, prioritize or fallback
+    if (partnerName && !extractedProponent.organizationName) {
+      extractedProponent.organizationName = partnerName;
+    }
+
+    const effectivePartnerName =
+      extractedProponent.organizationName || partnerName || 'Parceiro Corporativo';
+
     const result = {
       initiatives: normalizedInitiatives,
       portfolioSummary,
@@ -835,8 +979,9 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
       rawMarkdownOutput: cleanMarkdown,
       totalInitiatives: normalizedInitiatives.length,
       extractedFromFormat: formatType,
-      partnerName: partnerName || 'Parceiro Corporativo',
+      partnerName: effectivePartnerName,
       processedAt: new Date().toISOString(),
+      extractedProponent,
     };
 
     return res.json({ success: true, result });

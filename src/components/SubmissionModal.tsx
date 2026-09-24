@@ -41,6 +41,7 @@ interface SubmissionModalProps {
   initiative: InitiativeMatch;
   allInitiatives?: InitiativeMatch[];
   defaultModuleOption?: ModuleOption | null;
+  initialProponentInfo?: Partial<SubmissionProponentInfo>;
   onClose: () => void;
   onSubmissionSuccess?: (receipts: SubmissionReceipt[]) => void;
 }
@@ -49,6 +50,7 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({
   initiative,
   allInitiatives = [],
   defaultModuleOption,
+  initialProponentInfo,
   onClose,
   onSubmissionSuccess,
 }) => {
@@ -70,17 +72,27 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({
     defaultModuleOption?.id || initiative.options?.[0]?.id || 'primary'
   );
 
-  // Proponent Form Data
-  const [proponent, setProponent] = useState<SubmissionProponentInfo>({
-    proponentName: user?.name || '',
-    proponentEmail: user?.email || '',
-    proponentPhone: '',
-    proponentRole: user?.role === 'Docente / Professor' ? 'Professor Orientador' : 'Coordenador de Parcerias',
-    organizationName: '',
-    organizationSector: '',
-    organizationWebsite: '',
+  // Proponent Form Data - automatically pre-filled from AI extraction if available, or current user
+  const [proponent, setProponent] = useState<SubmissionProponentInfo>(() => ({
+    proponentName: initialProponentInfo?.proponentName || user?.name || '',
+    proponentEmail: initialProponentInfo?.proponentEmail || user?.email || '',
+    proponentPhone: initialProponentInfo?.proponentPhone ? maskPhone(initialProponentInfo.proponentPhone) : '',
+    proponentRole: initialProponentInfo?.proponentRole || (user?.role === 'Docente / Professor' ? 'Professor Orientador' : 'Coordenador de Parcerias'),
+    organizationName: initialProponentInfo?.organizationName || '',
+    organizationSector: initialProponentInfo?.organizationSector || '',
+    organizationWebsite: initialProponentInfo?.organizationWebsite || '',
     academicTermsAccepted: false,
-  });
+  }));
+
+  const hasAutoExtractedContact = Boolean(
+    initialProponentInfo &&
+      (initialProponentInfo.organizationName ||
+        initialProponentInfo.proponentName ||
+        initialProponentInfo.proponentEmail ||
+        initialProponentInfo.proponentPhone ||
+        initialProponentInfo.organizationSector ||
+        initialProponentInfo.organizationWebsite)
+  );
 
   // Validation Errors
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -622,6 +634,20 @@ O projeto será conduzido pedagogicamente por squads de 6 a 8 alunos sob mentori
                     <span className="text-[#ff4545] font-bold">*</span> Campos Obrigatórios
                   </span>
                 </div>
+
+                {hasAutoExtractedContact && (
+                  <div className="bg-[#89cea5]/15 border border-[#89cea5]/40 rounded-xl p-3 flex items-start gap-2.5">
+                    <Sparkles className="w-4 h-4 text-[#066d73] shrink-0 mt-0.5" />
+                    <div className="text-xs">
+                      <p className="font-bold text-[#066d73]">
+                        Dados de contato e da empresa preenchidos automaticamente pela IA
+                      </p>
+                      <p className="text-[#3c364c] text-[11px] mt-0.5 leading-relaxed">
+                        Identificamos as informações do solicitante diretamente a partir do texto/documento da iniciativa. Os campos abaixo já foram organizados para submissão e você pode revisá-los ou editá-los livremente antes de enviar.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Nome Completo */}

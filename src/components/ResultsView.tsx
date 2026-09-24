@@ -34,7 +34,11 @@ import {
   ChevronUp,
   XCircle,
   PieChart,
-  Send
+  Send,
+  Mail,
+  Phone,
+  Globe,
+  User
 } from 'lucide-react';
 import { MatchmakingResult, InitiativeMatch, AdherenceLevel, ModuleOption, ViabilityStatus } from '../types.ts';
 import { InteliSymbol } from './InteliBrand.tsx';

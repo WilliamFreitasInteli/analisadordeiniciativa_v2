@@ -74,6 +74,7 @@ export interface MatchmakingResult {
   extractedFromFormat: 'Texto' | 'Planilha / Dados' | 'Áudio / Transcrição' | 'Documento / PDF' | 'Arquivo';
   partnerName?: string;
   processedAt: string;
+  extractedProponent?: Partial<SubmissionProponentInfo>;
 }
 
 export interface AudioRecordingState {
