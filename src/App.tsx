@@ -40,6 +40,7 @@ function MatchMakerApp() {
   const [lastPayload, setLastPayload] = useState<any>(null);
   const [refinementInitiative, setRefinementInitiative] = useState<InitiativeMatch | null>(null);
   const [catalogFilterName, setCatalogFilterName] = useState<string | null>(null);
+  const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
 
   // Submissions State
   const [submissionModalState, setSubmissionModalState] = useState<{
@@ -48,6 +49,22 @@ function MatchMakerApp() {
     defaultOption?: ModuleOption | null;
   }>({ isOpen: false });
   const [submissionsCount, setSubmissionsCount] = useState<number>(0);
+
+  // Automatic retry countdown for transient spikes in demand
+  useEffect(() => {
+    if (retryCountdown === null) return;
+    if (retryCountdown <= 0) {
+      setRetryCountdown(null);
+      if (lastPayload && !isLoading) {
+        handleExecuteMatchmaking(lastPayload);
+      }
+      return;
+    }
+    const timer = setTimeout(() => {
+      setRetryCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [retryCountdown, lastPayload, isLoading]);
 
   // Load submissions count on mount
   useEffect(() => {
@@ -145,15 +162,27 @@ function MatchMakerApp() {
 
       setMatchResult(data.result);
       setActiveTab('matchmaking');
+      setRetryCountdown(null);
     } catch (err: any) {
       console.error('Erro na chamada de matchmaking:', err);
-      setErrorMsg(cleanErrorMessage(err.message || ''));
+      const clean = cleanErrorMessage(err.message || '');
+      setErrorMsg(clean);
+      // If error is high demand / 503 / timeout, start a 4-second auto-retry countdown
+      if (
+        clean.toLowerCase().includes('alta demanda') ||
+        clean.toLowerCase().includes('temporariamente') ||
+        clean.includes('503') ||
+        clean.includes('Gateway Timeout')
+      ) {
+        setRetryCountdown(4);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRetry = () => {
+    setRetryCountdown(null);
     if (lastPayload) {
       handleExecuteMatchmaking(lastPayload);
     }
@@ -271,26 +300,43 @@ function MatchMakerApp() {
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
               <div>
-                <h4 className="text-sm font-bold text-rose-900">Atenção no Processamento da IA</h4>
+                <h4 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+                  Atenção no Processamento da IA
+                  {retryCountdown !== null && retryCountdown > 0 && (
+                    <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-950 border border-rose-300 animate-pulse">
+                      Reconectando automaticamente em {retryCountdown}s...
+                    </span>
+                  )}
+                </h4>
                 <p className="text-xs text-rose-700 mt-0.5 leading-relaxed max-w-2xl">{errorMsg}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               {lastPayload && (
                 <button
-                  onClick={handleRetry}
+                  onClick={() => {
+                    setRetryCountdown(null);
+                    handleRetry();
+                  }}
                   disabled={isLoading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#ff4545] hover:bg-[#e03232] text-white transition shadow-sm disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#ff4545] hover:bg-[#e03232] text-white transition shadow-sm disabled:opacity-50 font-mono cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                  {isLoading ? 'Reenviando...' : 'Tentar Novamente'}
+                  {isLoading
+                    ? 'Reenviando...'
+                    : retryCountdown !== null && retryCountdown > 0
+                    ? `Reconectar Agora (${retryCountdown}s)`
+                    : 'Tentar Novamente'}
                 </button>
               )}
               <button
-                onClick={() => setErrorMsg(null)}
-                className="text-xs text-rose-600 hover:text-rose-900 px-2 py-1 rounded hover:bg-rose-100 transition"
+                onClick={() => {
+                  setRetryCountdown(null);
+                  setErrorMsg(null);
+                }}
+                className="text-xs text-rose-600 hover:text-rose-900 px-2.5 py-1.5 rounded hover:bg-rose-100 transition cursor-pointer font-medium"
               >
-                Fechar
+                Cancelar
               </button>
             </div>
           </div>
