@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header.tsx';
 import { InputPanel } from './components/InputPanel.tsx';
 import { ResultsView } from './components/ResultsView.tsx';
 import { KnowledgeBaseExplorer } from './components/KnowledgeBaseExplorer.tsx';
 import { RefinementModal } from './components/RefinementModal.tsx';
+import { SubmissionModal } from './components/SubmissionModal.tsx';
+import { SubmissionsHistoryModal } from './components/SubmissionsHistoryModal.tsx';
 import { InteliLogo, InteliPillarsGraphic, InteliSymbol } from './components/InteliBrand.tsx';
 import { LoginScreen } from './components/LoginScreen.tsx';
 import { AuthProvider, useAuth } from './context/AuthContext.tsx';
-import { MatchmakingResult, InitiativeMatch } from './types.ts';
-import { INTELI_MODULES_CATALOG } from './data/inteliKnowledgeBase.ts';
+import { MatchmakingResult, InitiativeMatch, ModuleOption } from './types.ts';
+import { INTELI_MODULES_CATALOG, InteliModule } from './data/inteliKnowledgeBase.ts';
 import {
   Sparkles,
   Layers,
@@ -24,7 +26,9 @@ import {
   CheckCircle2,
   RefreshCw,
   Award,
-  Compass
+  Compass,
+  History,
+  Send
 } from 'lucide-react';
 
 function MatchMakerApp() {
@@ -36,6 +40,31 @@ function MatchMakerApp() {
   const [lastPayload, setLastPayload] = useState<any>(null);
   const [refinementInitiative, setRefinementInitiative] = useState<InitiativeMatch | null>(null);
   const [catalogFilterName, setCatalogFilterName] = useState<string | null>(null);
+
+  // Submissions State
+  const [submissionModalState, setSubmissionModalState] = useState<{
+    isOpen: boolean;
+    initiative?: InitiativeMatch;
+    defaultOption?: ModuleOption | null;
+  }>({ isOpen: false });
+  const [submissionsCount, setSubmissionsCount] = useState<number>(0);
+
+  // Load submissions count on mount
+  useEffect(() => {
+    fetchSubmissionsCount();
+  }, []);
+
+  const fetchSubmissionsCount = async () => {
+    try {
+      const res = await fetch('/api/submission-history');
+      const data = await res.json();
+      if (data.success && typeof data.count === 'number') {
+        setSubmissionsCount(data.count);
+      }
+    } catch (e) {
+      console.warn('Não foi possível carregar contagem de submissões:', e);
+    }
+  };
 
   if (isAuthLoading) {
     return (
@@ -140,12 +169,74 @@ function MatchMakerApp() {
     setActiveTab('catalog');
   };
 
+  const handleOpenSubmission = (initiative: InitiativeMatch, defaultOption?: ModuleOption | null) => {
+    setSubmissionModalState({
+      isOpen: true,
+      initiative,
+      defaultOption: defaultOption || null,
+    });
+  };
+
+  const handleOpenBatchSubmission = (initiatives: InitiativeMatch[]) => {
+    if (!initiatives || initiatives.length === 0) return;
+    setSubmissionModalState({
+      isOpen: true,
+      initiative: initiatives[0],
+      defaultOption: null,
+    });
+  };
+
+  const handleOpenSubmissionForModule = (module: InteliModule) => {
+    const syntheticInitiative: InitiativeMatch = {
+      id: `manual-${module.code}-${Date.now()}`,
+      code: module.code,
+      controlCode: module.controlCode,
+      title: `Proposta de Parceria: ${module.metaprojectName}`,
+      challengeSummary: `Desenvolvimento de desafio corporativo alinhado à ementa do módulo "${module.metaprojectName}" (${module.course}).`,
+      matchedModule: module.name,
+      recommendedMetaproject: module.metaprojectName,
+      matchedCourse: module.course,
+      quarter: module.quarter,
+      matchJustification: ['Alinhamento direto com a ementa canônica e competências estruturais do ciclo.'],
+      adherenceLevel: 'Alto',
+      adherenceJustification: 'Alinhamento integral com a ementa canônica e competências estruturais do ciclo.',
+      partnerPortalUrl: module.partnerPortalUrl || 'https://web.inteli.edu.br/projetos-parceiros',
+      options: [
+        {
+          id: `opt-${module.code}`,
+          isPrimary: true,
+          label: 'Opção Direta',
+          code: module.code,
+          controlCode: module.controlCode,
+          metaprojectName: module.metaprojectName,
+          moduleName: module.name,
+          course: module.course,
+          quarter: module.quarter,
+          year: module.year,
+          adherenceLevel: 'Alto',
+          adherenceJustification: 'Compatibilidade com as competências pedagógicas do módulo.',
+          pros: ['Desenvolvimento direto no foco temático do curso.'],
+          cons: ['Duração delimitada a 10 semanas em 5 sprints quinzenais.'],
+          scopeAdjustment: 'Foco em validação de arquitetura e protótipo funcional demonstrável.',
+          partnerPortalUrl: module.partnerPortalUrl,
+        },
+      ],
+    };
+
+    setSubmissionModalState({
+      isOpen: true,
+      initiative: syntheticInitiative,
+      defaultOption: syntheticInitiative.options?.[0],
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#1b1626] text-[#e6eaeb] flex flex-col font-sans">
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         modulesCount={INTELI_MODULES_CATALOG.length}
+        submissionsCount={submissionsCount}
       />
 
       {/* Inteli Academic DNA Bar */}
@@ -281,6 +372,8 @@ function MatchMakerApp() {
                 onOpenRefinement={(item) => setRefinementInitiative(item)}
                 onSelectModule={handleSelectModuleForCatalog}
                 onReset={handleResetAnalysis}
+                onOpenSubmission={handleOpenSubmission}
+                onOpenBatchSubmission={handleOpenBatchSubmission}
               />
             )}
           </div>
@@ -291,6 +384,14 @@ function MatchMakerApp() {
           <KnowledgeBaseExplorer
             selectedModuleName={catalogFilterName}
             onSelectModuleForFilter={(name) => setCatalogFilterName(name)}
+            onOpenSubmissionForModule={handleOpenSubmissionForModule}
+          />
+        )}
+
+        {/* Tab 3: Submissions History */}
+        {activeTab === 'history' && (
+          <SubmissionsHistoryModal
+            onClose={() => setActiveTab('matchmaking')}
           />
         )}
       </main>
@@ -300,6 +401,19 @@ function MatchMakerApp() {
         <RefinementModal
           initiative={refinementInitiative}
           onClose={() => setRefinementInitiative(null)}
+        />
+      )}
+
+      {/* Official Form Submission Modal */}
+      {submissionModalState.isOpen && submissionModalState.initiative && (
+        <SubmissionModal
+          initiative={submissionModalState.initiative}
+          allInitiatives={matchResult?.initiatives || []}
+          defaultModuleOption={submissionModalState.defaultOption}
+          onClose={() => setSubmissionModalState({ isOpen: false })}
+          onSubmissionSuccess={() => {
+            fetchSubmissionsCount();
+          }}
         />
       )}
 

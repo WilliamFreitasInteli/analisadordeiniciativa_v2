@@ -15,7 +15,8 @@ import {
   Cpu,
   ShieldAlert,
   Server,
-  Workflow
+  Workflow,
+  Send
 } from 'lucide-react';
 import { INTELI_MODULES_CATALOG, InteliModule } from '../data/inteliKnowledgeBase.ts';
 import { INTELI_HARDWARE_INVENTORY, InteliHardwareItem } from '../data/inteliHardwareCatalog.ts';
@@ -25,12 +26,14 @@ interface KnowledgeBaseExplorerProps {
   selectedModuleName?: string | null;
   onSelectModuleForFilter?: (moduleName: string) => void;
   onClose?: () => void;
+  onOpenSubmissionForModule?: (module: InteliModule) => void;
 }
 
 export const KnowledgeBaseExplorer: React.FC<KnowledgeBaseExplorerProps> = ({
   selectedModuleName,
   onSelectModuleForFilter,
   onClose,
+  onOpenSubmissionForModule,
 }) => {
   const [activeTab, setActiveTab] = useState<'modules' | 'hardware' | 'governance'>('modules');
   const [searchQuery, setSearchQuery] = useState(selectedModuleName || '');
@@ -616,22 +619,39 @@ export const KnowledgeBaseExplorer: React.FC<KnowledgeBaseExplorerProps> = ({
               </ul>
             </div>
 
-            <div className="pt-3 border-t border-[#e2e5ec] flex items-center justify-between gap-3">
-              {activeModuleModal.partnerPortalUrl ? (
-                <a
-                  href={activeModuleModal.partnerPortalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-[#364f99] hover:underline font-mono"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Ver no Portal de Parcerias Inteli</span>
-                </a>
-              ) : <div />}
+            <div className="pt-3 border-t border-[#e2e5ec] flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2.5">
+                {activeModuleModal.partnerPortalUrl && (
+                  <a
+                    href={activeModuleModal.partnerPortalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-[#364f99] hover:underline font-mono"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Portal Inteli</span>
+                  </a>
+                )}
+
+                {onOpenSubmissionForModule && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mod = activeModuleModal;
+                      setActiveModuleModal(null);
+                      onOpenSubmissionForModule(mod);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#ff4545] hover:bg-[#e03232] text-white transition shadow-sm font-mono"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Submeter Proposta ({activeModuleModal.code})</span>
+                  </button>
+                )}
+              </div>
 
               <button
                 onClick={() => setActiveModuleModal(null)}
-                className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#ff4545] hover:bg-[#e03232] text-white transition shadow-sm"
+                className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#edeef4] hover:bg-[#d8dce6] text-[#2e2640] transition"
               >
                 Fechar
               </button>

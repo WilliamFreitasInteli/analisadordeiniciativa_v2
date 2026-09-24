@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, BookOpen, Layers, CheckCircle2, LogOut, User } from 'lucide-react';
+import { Sparkles, BookOpen, Layers, CheckCircle2, LogOut, User, History } from 'lucide-react';
 import { InteliLogo } from './InteliBrand.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 
@@ -7,12 +7,14 @@ interface HeaderProps {
   activeTab: 'matchmaking' | 'catalog' | 'history';
   setActiveTab: (tab: 'matchmaking' | 'catalog' | 'history') => void;
   modulesCount: number;
+  submissionsCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
   modulesCount,
+  submissionsCount = 0,
 }) => {
   const { user, signOut } = useAuth();
   return (
@@ -65,6 +67,27 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#f0f2f8] text-[#364f99] border border-[#d8dce6]">
                 {modulesCount}
               </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                activeTab === 'history'
+                  ? 'bg-[#ff4545] text-white shadow-md shadow-[#ff4545]/20'
+                  : 'text-[#555065] hover:text-[#2e2640] hover:bg-[#f0f2f8]'
+              }`}
+            >
+              <History className="w-4 h-4 text-[#066d73]" />
+              <span>Submissões</span>
+              {submissionsCount > 0 && (
+                <span className={`ml-0.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                  activeTab === 'history'
+                    ? 'bg-white/25 text-white border-white/40'
+                    : 'bg-[#89cea5]/30 text-[#066d73] border-[#89cea5]/40'
+                }`}>
+                  {submissionsCount}
+                </span>
+              )}
             </button>
           </nav>
 

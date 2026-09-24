@@ -863,6 +863,245 @@ Responda de maneira direta, prática e executiva, considerando o modelo acadêmi
   }
 });
 
+// In-memory persistent store for portal submission receipts and audit log
+const SUBMISSIONS_AUDIT_LOG: any[] = [];
+
+// Helper function to synthesize adapted text based on pros and trade-offs
+function generateRuleBasedAdaptedText(
+  initiative: any,
+  moduleOption: any
+): {
+  adaptedDescription: string;
+  tradeoffMitigation: string;
+  deliverables: string[];
+} {
+  const modName = moduleOption.metaprojectName || moduleOption.moduleName || 'Metaprojeto Inteli';
+  const course = moduleOption.course || 'Computação / Negócios';
+  const pros = Array.isArray(moduleOption.pros) && moduleOption.pros.length > 0
+    ? moduleOption.pros.join('. ')
+    : 'Desenvolvimento alinhado às competências essenciais do módulo com squad multidisciplinar.';
+  const cons = Array.isArray(moduleOption.cons) && moduleOption.cons.length > 0
+    ? moduleOption.cons.join('. ')
+    : 'Delimitação estrita do escopo para 10 semanas sem interdependências críticas de produção.';
+  const scopeAdj = moduleOption.scopeAdjustment || 'Foco em protótipo funcional de alta fidelidade e arquitetura validada.';
+
+  const adaptedDescription = `[Proposta Direcionada para ${modName} - ${course}]\n\nDesafio Central: ${initiative.challengeSummary || initiative.title}\n\nEnquadramento Pedagógico & Oportunidade: Esta submissão foi estruturada especificamente para alavancar as competências de ${course}, aproveitando: ${pros}. O escopo foi delimitado para 10 semanas em 5 sprints quinzenais, assegurando valor prático para o parceiro corporativo.`;
+
+  const tradeoffMitigation = `Mitigação de Trade-offs & Calibração de Escopo: ${cons}. Estratégia de Mitigação adotada: ${scopeAdj}. Assegura-se que a squad de alunos atuará em ambiente controlado (sandbox/simulação), em conformidade com as diretrizes do Escritório de Projetos do Inteli.`;
+
+  const deliverables = [
+    'Sprint 1-2: Documento de Requisitos (TAPI), Arquitetura Técnica e Wireframes validados.',
+    'Sprint 3: Primeiro MVP Funcional integrando a lógica central do módulo.',
+    'Sprint 4: Refinamento de testes, integração e testes de usabilidade com o parceiro.',
+    'Sprint 5: Entrega da solução final empacotada, documentação de handover e apresentação executiva.'
+  ];
+
+  return {
+    adaptedDescription,
+    tradeoffMitigation,
+    deliverables,
+  };
+}
+
+// POST /api/adapt-submission-text - AI-powered adaptation of initiative text considering pros and trade-offs
+app.post('/api/adapt-submission-text', async (req, res) => {
+  try {
+    const { initiative, moduleOption } = req.body;
+    if (!initiative || !moduleOption) {
+      return res.status(400).json({ error: 'Dados da iniciativa ou módulo não fornecidos.' });
+    }
+
+    // Default fast fallback
+    const fallback = generateRuleBasedAdaptedText(initiative, moduleOption);
+
+    // Try Gemini adaptation for ultra-polished copy
+    const prompt = `Você é o Coordenador Sênior do Escritório de Projetos do INTELI.
+Adapte a submissão desta iniciativa corporativa para o formulário oficial de submissão de projetos do Inteli.
+
+INICIATIVA DO PARCEIRO:
+- Título: ${initiative.title}
+- Resumo do Desafio: ${initiative.challengeSummary}
+
+MÓDULO / METAPROJETO SELECIONADO:
+- Módulo: ${moduleOption.moduleName} (${moduleOption.code || ''})
+- Curso: ${moduleOption.course}
+- Pontos Positivos (Prós): ${Array.isArray(moduleOption.pros) ? moduleOption.pros.join('; ') : 'Afinidade temática'}
+- Trade-offs / Limitações (Contras): ${Array.isArray(moduleOption.cons) ? moduleOption.cons.join('; ') : 'Ciclo de 10 semanas'}
+- Ajuste de Escopo Proposto: ${moduleOption.scopeAdjustment || 'Padrão'}
+
+REGRAS:
+1. Adequar a redação da iniciativa de modo a enfatizar os PONTOS POSITIVOS do módulo.
+2. Contornar e mitigar formalmente os TRADE-OFFS identificados (explicando como o escopo foi calibrado para 10 semanas em ambiente controlado).
+3. Entregar exatamente o formato JSON especificado.
+
+Responda APENAS com um objeto JSON:
+{
+  "adaptedDescription": "Texto polido e consultivo descrevendo a dor do parceiro e o encaixe com o módulo",
+  "tradeoffMitigation": "Texto detalhando como os trade-offs e limites de 10 semanas foram contornados",
+  "deliverables": [
+    "Sprint 1-2: ...",
+    "Sprint 3: ...",
+    "Sprint 4: ...",
+    "Sprint 5: ..."
+  ]
+}`;
+
+    try {
+      const response = await generateContentWithResilience(
+        prompt,
+        {
+          systemInstruction: 'Você gera propostas de projetos corporativos para o Inteli em formato JSON estrito.',
+          temperature: 0.2,
+          responseMimeType: 'application/json',
+        },
+        'gemini-2.5-flash'
+      );
+
+      const raw = response.text || '';
+      const cleanJson = raw.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+      const parsed = JSON.parse(cleanJson);
+
+      return res.json({
+        success: true,
+        adaptedDescription: parsed.adaptedDescription || fallback.adaptedDescription,
+        tradeoffMitigation: parsed.tradeoffMitigation || fallback.tradeoffMitigation,
+        deliverables: Array.isArray(parsed.deliverables) && parsed.deliverables.length > 0 ? parsed.deliverables : fallback.deliverables,
+      });
+    } catch (aiErr) {
+      console.warn('Fallback para geração de texto adaptado baseado em regras:', aiErr);
+      return res.json({
+        success: true,
+        ...fallback,
+      });
+    }
+  } catch (err: any) {
+    console.error('Erro ao adaptar texto de submissão:', err);
+    return res.status(500).json({ error: extractErrorMessage(err) });
+  }
+});
+
+// Helper validation for phone
+function isPhoneValid(phone: string): boolean {
+  if (!phone) return false;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 10 || digits.length > 11) return false;
+  const ddd = parseInt(digits.slice(0, 2), 10);
+  if (isNaN(ddd) || ddd < 11 || ddd > 99) return false;
+  return true;
+}
+
+// POST /api/submit-initiative - Emulate portal form submission, validation & protocol issuance
+app.post('/api/submit-initiative', async (req, res) => {
+  try {
+    const { proponent, submissions } = req.body;
+
+    // Validate proponent fields
+    if (!proponent) {
+      return res.status(400).json({ error: 'Dados do proponente não informados.' });
+    }
+
+    const {
+      proponentName,
+      proponentEmail,
+      proponentPhone,
+      proponentRole,
+      organizationName,
+      academicTermsAccepted,
+    } = proponent;
+
+    if (!proponentName || !proponentName.trim()) {
+      return res.status(400).json({ error: 'O Nome do Solicitante/Proponente é obrigatório.' });
+    }
+
+    if (!proponentEmail || !proponentEmail.trim() || !proponentEmail.includes('@')) {
+      return res.status(400).json({ error: 'E-mail corporativo válido é obrigatório.' });
+    }
+
+    if (!proponentPhone || !isPhoneValid(proponentPhone)) {
+      return res.status(400).json({
+        error: 'Telefone de contato inválido. Informe um telefone brasileiro com DDD válido (10 ou 11 dígitos).'
+      });
+    }
+
+    if (!proponentRole || !proponentRole.trim()) {
+      return res.status(400).json({ error: 'O Cargo/Função do proponente é obrigatório.' });
+    }
+
+    if (!organizationName || !organizationName.trim()) {
+      return res.status(400).json({ error: 'O Nome da Organização/Empresa parceira é obrigatório.' });
+    }
+
+    if (!academicTermsAccepted) {
+      return res.status(400).json({
+        error: 'É obrigatório declarar ciência das diretrizes acadêmicas do Inteli (sprints de 10 semanas sem SLA comercial).'
+      });
+    }
+
+    if (!Array.isArray(submissions) || submissions.length === 0) {
+      return res.status(400).json({ error: 'Nenhuma iniciativa informada para submissão.' });
+    }
+
+    // Process each submission item
+    const currentYear = new Date().getFullYear();
+    const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+    const receipts: any[] = [];
+
+    for (let i = 0; i < submissions.length; i++) {
+      const item = submissions[i];
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const protocol = `INTELI-${currentYear}-${currentMonth}-${randomSuffix}`;
+      const submittedAt = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+      const receipt = {
+        protocol,
+        submittedAt,
+        initiativeTitle: item.initiativeTitle || 'Iniciativa Inteli',
+        moduleCode: item.moduleCode || '',
+        moduleControlCode: item.moduleControlCode || '',
+        moduleName: item.moduleName || '',
+        metaprojectName: item.metaprojectName || item.moduleName || '',
+        course: item.course || '',
+        quarter: item.quarter || '',
+        proponentName: proponentName.trim(),
+        proponentEmail: proponentEmail.trim(),
+        proponentPhone: proponentPhone.trim(),
+        proponentRole: proponentRole.trim(),
+        organizationName: organizationName.trim(),
+        organizationSector: proponent.organizationSector?.trim() || '',
+        adaptedChallengeDescription: item.adaptedChallengeDescription || '',
+        adaptedDeliverables: Array.isArray(item.adaptedDeliverables) ? item.adaptedDeliverables : [],
+        tradeoffMitigationNote: item.tradeoffMitigationNote || '',
+        partnerPortalUrl: item.partnerPortalUrl || 'https://web.inteli.edu.br/projetos-parceiros',
+        status: 'Confirmado',
+      };
+
+      // Emulate form submission action into audit log
+      SUBMISSIONS_AUDIT_LOG.unshift(receipt);
+      receipts.push(receipt);
+    }
+
+    return res.json({
+      success: true,
+      message: `Submissão realizada com sucesso! ${receipts.length} protocolo(s) emitido(s).`,
+      receipts,
+      totalSubmitted: receipts.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error('Erro na submissão de iniciativas:', err);
+    return res.status(500).json({ error: extractErrorMessage(err) });
+  }
+});
+
+// GET /api/submission-history - Return audit log of all completed submissions
+app.get('/api/submission-history', (_req, res) => {
+  return res.json({
+    success: true,
+    history: SUBMISSIONS_AUDIT_LOG,
+    count: SUBMISSIONS_AUDIT_LOG.length,
+  });
+});
+
 // Fallback helper to parse markdown initiatives if JSON block was absent
 function parseMarkdownInitiativesFallback(markdown: string) {
   const initiatives: any[] = [];

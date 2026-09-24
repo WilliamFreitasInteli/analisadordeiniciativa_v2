@@ -33,7 +33,8 @@ import {
   ChevronDown,
   ChevronUp,
   XCircle,
-  PieChart
+  PieChart,
+  Send
 } from 'lucide-react';
 import { MatchmakingResult, InitiativeMatch, AdherenceLevel, ModuleOption, ViabilityStatus } from '../types.ts';
 import { InteliSymbol } from './InteliBrand.tsx';
@@ -44,6 +45,8 @@ interface ResultsViewProps {
   onOpenRefinement: (initiative: InitiativeMatch) => void;
   onSelectModule: (moduleName: string) => void;
   onReset: () => void;
+  onOpenSubmission?: (initiative: InitiativeMatch, defaultModuleOption?: ModuleOption | null) => void;
+  onOpenBatchSubmission?: (initiatives: InitiativeMatch[]) => void;
 }
 
 export const ResultsView: React.FC<ResultsViewProps> = ({
@@ -51,6 +54,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   onOpenRefinement,
   onSelectModule,
   onReset,
+  onOpenSubmission,
+  onOpenBatchSubmission,
 }) => {
   const [copiedAll, setCopiedAll] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -328,6 +333,21 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             <FileSpreadsheet className="w-3.5 h-3.5 text-[#89cea5]" />
             <span>{isExportingExcel ? 'Gerando...' : 'Baixar .XLSX'}</span>
           </button>
+
+          {/* Submeter Propostas ao Portal Inteli Button */}
+          {onOpenBatchSubmission && (
+            <button
+              onClick={() => onOpenBatchSubmission(result.initiatives)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-[#ff4545] hover:bg-[#e03232] text-white transition shadow-md shadow-[#ff4545]/20"
+              title="Submeter iniciativas catalogadas diretamente ao portal do Inteli"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Submeter Propostas</span>
+              <span className="text-[10px] font-mono bg-white/20 px-1.5 py-0.2 rounded">
+                Portal Inteli
+              </span>
+            </button>
+          )}
 
           <button
             onClick={handlePrint}
@@ -855,16 +875,28 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                           </div>
                         )}
 
-                        {/* Action: Ver Ementa deste Módulo */}
-                        <div className="pt-2 border-t border-[#e2e5ec]">
+                        {/* Action: Ver Ementa deste Módulo & Submeter Proposta para este Módulo */}
+                        <div className="pt-2 border-t border-[#e2e5ec] flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={() => onSelectModule(opt.moduleName || opt.metaprojectName)}
-                            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-white hover:bg-[#edeef4] text-[#2e2640] border border-[#d8dce6] transition shadow-2xs"
+                            className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-white hover:bg-[#edeef4] text-[#2e2640] border border-[#d8dce6] transition shadow-2xs"
                           >
-                            <span>Consultar Ementa & Competências</span>
-                            <ExternalLink className="w-3.5 h-3.5 text-[#ff4545]" />
+                            <span>Ementa & Competências</span>
+                            <ExternalLink className="w-3 h-3 text-[#ff4545]" />
                           </button>
+
+                          {onOpenSubmission && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenSubmission(item, opt)}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold bg-[#364f99] hover:bg-[#2b4182] text-white transition shadow-2xs font-mono"
+                              title={`Submeter proposta específica para ${opt.code}`}
+                            >
+                              <Send className="w-3 h-3 text-white" />
+                              <span>Submeter {opt.code}</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -884,18 +916,34 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-white hover:bg-[#edeef4] text-[#2e2640] border border-[#d8dce6] transition shadow-2xs"
                     >
                       <Copy className="w-3.5 h-3.5 text-[#364f99]" />
-                      <span>{copiedId === item.id ? 'Copiado!' : 'Copiar Iniciativa'}</span>
+                      <span>{copiedId === item.id ? 'Copiado!' : 'Copiar'}</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => onOpenRefinement(item)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-[#ff4545] hover:bg-[#e03232] text-white shadow-sm shadow-[#ff4545]/20 transition"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-[#edeef4] hover:bg-[#d8dce6] text-[#2e2640] transition"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
-                      <span>Refinar Escopo / Simular Negociação</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span>Refinar Escopo</span>
                     </button>
+
+                    {onOpenSubmission && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenSubmission(item)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-[#ff4545] hover:bg-[#e03232] text-white shadow-sm shadow-[#ff4545]/20 transition"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Submeter ao Portal Inteli</span>
+                        {item.options && item.options.length > 1 && (
+                          <span className="text-[10px] bg-white/25 px-1.5 py-0.2 rounded font-mono">
+                            {item.options.length} opções
+                          </span>
+                        )}
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1203,16 +1251,32 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             </div>
 
             <div className="pt-3 border-t border-[#e2e5ec] flex items-center justify-between gap-3">
-              <button
-                onClick={() => {
-                  setSelectedInitiativeModal(null);
-                  onOpenRefinement(selectedInitiativeModal);
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#ff4545] hover:bg-[#e03232] text-white shadow-sm transition"
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span>Refinar Escopo Desta Iniciativa</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedInitiativeModal(null);
+                    onOpenRefinement(selectedInitiativeModal);
+                  }}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#edeef4] hover:bg-[#d8dce6] text-[#2e2640] transition"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Refinar Escopo</span>
+                </button>
+
+                {onOpenSubmission && (
+                  <button
+                    onClick={() => {
+                      const item = selectedInitiativeModal;
+                      setSelectedInitiativeModal(null);
+                      onOpenSubmission(item);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#ff4545] hover:bg-[#e03232] text-white shadow-sm transition"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Submeter ao Portal</span>
+                  </button>
+                )}
+              </div>
 
               <button
                 onClick={() => setSelectedInitiativeModal(null)}

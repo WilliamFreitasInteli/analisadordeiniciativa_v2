@@ -90,3 +90,70 @@ export interface RefinementMessage {
   text: string;
   timestamp: string;
 }
+
+export interface SubmissionProponentInfo {
+  proponentName: string;
+  proponentEmail: string;
+  proponentPhone: string;
+  proponentRole: string;
+  organizationName: string;
+  organizationSector?: string;
+  organizationWebsite?: string;
+  academicTermsAccepted: boolean;
+}
+
+export interface SubmissionItemConfig {
+  id: string;
+  initiativeId: string;
+  initiativeTitle: string;
+  moduleCode: string;
+  moduleControlCode: string;
+  moduleName: string;
+  metaprojectName: string;
+  course: string;
+  quarter?: string;
+  year?: number;
+  adherenceLevel: AdherenceLevel;
+  pros: string[];
+  cons: string[];
+  scopeAdjustment?: string;
+  partnerPortalUrl: string;
+
+  // Adapted content tailored to this module's pros & trade-offs
+  adaptedChallengeDescription: string;
+  adaptedDeliverables: string[];
+  tradeoffMitigationNote: string;
+  hardwareRequirements?: string;
+  additionalObservations?: string;
+
+  // Live status in the submission queue
+  status: 'pending' | 'adapting' | 'validating' | 'submitting' | 'success' | 'error';
+  progressMessage?: string;
+  protocol?: string;
+  submittedAt?: string;
+  errorMessage?: string;
+}
+
+export interface SubmissionReceipt {
+  protocol: string;
+  submittedAt: string;
+  initiativeTitle: string;
+  moduleCode: string;
+  moduleControlCode: string;
+  moduleName: string;
+  metaprojectName: string;
+  course: string;
+  quarter?: string;
+  proponentName: string;
+  proponentEmail: string;
+  proponentPhone: string;
+  proponentRole: string;
+  organizationName: string;
+  organizationSector?: string;
+  adaptedChallengeDescription: string;
+  adaptedDeliverables: string[];
+  tradeoffMitigationNote: string;
+  partnerPortalUrl: string;
+  status: 'Confirmado' | 'Falha';
+}
+
