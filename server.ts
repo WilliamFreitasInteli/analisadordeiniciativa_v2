@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from '@google/genai';
 import * as XLSX from 'xlsx';
+import mammoth from 'mammoth';
 import { getModulesContextText, INTELI_MODULES_CATALOG } from './src/data/inteliKnowledgeBase.ts';
 
 dotenv.config();
@@ -144,35 +145,24 @@ async function generateContentWithResilience(
   let lastError: any = null;
 
   for (const model of uniqueModels) {
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        console.log(`[Gemini] Executando chamada com modelo '${model}' (tentativa ${attempt}/2)...`);
-        // Enforce 60s timeout per call so deep multi-initiative analyses have ample time
-        const response = await withTimeout(
-          ai.models.generateContent({
-            model,
-            contents,
-            config,
-          }),
-          60000,
-          `Tempo limite de 60s excedido no modelo '${model}'`
-        );
-        return response;
-      } catch (err: any) {
-        lastError = err;
-        const msg = extractErrorMessage(err);
-        console.warn(`[Gemini] Alerta com modelo '${model}' (tentativa ${attempt}):`, msg);
-
-        if (isRetryableDemandError(err) && attempt < 2) {
-          const delay = attempt * 1200;
-          console.log(`[Gemini] Aguardando ${delay}ms antes de tentar novamente...`);
-          await new Promise((res) => setTimeout(res, delay));
-          continue;
-        }
-
-        // If not retryable or timed out, proceed immediately to the next model in the cascade
-        break;
-      }
+    try {
+      console.log(`[Gemini] Executando chamada com modelo '${model}'...`);
+      // Enforce 35s timeout per call so Cloud Run / dev proxy 60s gateway timeout is never breached
+      const response = await withTimeout(
+        ai.models.generateContent({
+          model,
+          contents,
+          config,
+        }),
+        35000,
+        `Tempo limite de 35s excedido no modelo '${model}'`
+      );
+      return response;
+    } catch (err: any) {
+      lastError = err;
+      const msg = extractErrorMessage(err);
+      console.warn(`[Gemini] Alerta com modelo '${model}':`, msg);
+      // Immediately proceed to the next fallback model in the cascade without sleep
     }
   }
 
@@ -318,10 +308,20 @@ Portanto, para CADA iniciativa identificada, você DEVE trazer as POSSIBILIDADES
   * Ajuste de Escopo Recomendado: Como calibrar a demanda para encaixar nas 10 semanas do módulo (aplicando pivôs pedagógicos e critérios de exclusão).
 - Guia de Decisão para a Reunião com o Parceiro: orientação prática para o coordenador conduzir a escolha junto à empresa.
 
+# DIRETRIZ CRÍTICA PARA ARQUIVOS COM MÚLTIPLAS INICIATIVAS (PORTFÓLIOS):
+Quando o usuário anexar um arquivo (PDF, Word, Planilha ou Texto) contendo múltiplas demandas (ex: 5, 10, 20+ iniciativas):
+1. EXTRAIA E CLASSIFIQUE TODAS AS INICIATIVAS IDENTIFICADAS no documento. NUNCA limite a apenas uma.
+2. Para CADA iniciativa, atribua um dos 3 Status de Enquadramento de Viabilidade:
+   - "Aderente (Match Direto)": Demanda tem alta aderência à ementa do módulo sem necessitar de cortes profundos.
+   - "Ajuste de Escopo Necessário": Demanda é viável pedagogicamente, mas requer adaptação (ex: 1 nó físico em bancada + simulação de nós virtuais, uso de sandbox/staging, foco em 10 semanas).
+   - "Fora de Escopo Computacional": Demanda que viola as fronteiras inegociáveis (ex: instalação externa em campo, sustentação/SLA ao vivo, suporte comercial contínuo).
+3. Mantenha os resumos executivos e objetivos para garantir tempo de resposta rápido e ágil.
+
 # FORMATO DE SAÍDA EXIGIDO EM TEXTO
 Para CADA iniciativa identificada, estruture a resposta de forma clara e visual:
 
 ## 🎯 Iniciativa: [Título Curto e Intuitivo do Desafio do Parceiro]
+*   **Status de Viabilidade:** [Aderente (Match Direto) | Ajuste de Escopo Necessário | Fora de Escopo Computacional]
 *   **Resumo do Desafio:** [Descrição em 2 ou 3 linhas do que o parceiro precisa]
 *   **Metaprojeto Principal Recomendado:** [Código Oficial] - [Nome Canônico Original Oficial] (ex: SIMD7 - Sistemas de Gestão e Governança Empresarial)
 *   **Curso/Trimestre:** [ex: Sistemas de Informação • 3º TRI]
@@ -377,6 +377,8 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
       "matchedYear": 2,
       "matchJustification": ["Ponto chave 1", "Ponto chave 2"],
       "adherenceLevel": "Alto" | "Médio" | "Baixo",
+      "viabilityStatus": "Aderente (Match Direto)" | "Ajuste de Escopo Necessário" | "Fora de Escopo Computacional",
+      "recommendedAction": "Ação recomendada (ex: Avançar para TAPI / Desenho de Escopo)",
       "adherenceJustification": "Justificativa breve da opção principal",
       "keyTechnologies": ["tech1", "tech2"],
       "potentialRisksOrGaps": ["alerta de escopo principal"],
@@ -463,6 +465,63 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
             text: `Arquivo de texto anexado: ${fileName}.`,
           });
         }
+      } else if (fileName.match(/\.docx$/i)) {
+        // Modern Word document (.docx) - extract text using mammoth
+        try {
+          const buffer = Buffer.from(fileAttachment.base64, 'base64');
+          const docxResult = await mammoth.extractRawText({ buffer });
+          const extractedText = docxResult.value?.trim() || '';
+          if (extractedText.length > 0) {
+            parts.push({
+              text: `[DOCUMENTO WORD DO PARCEIRO: "${fileName}"]\n\n${extractedText}`,
+            });
+          } else {
+            parts.push({
+              text: `[DOCUMENTO WORD: "${fileName}"] (O arquivo foi lido, mas nenhum texto estruturado foi extraído).`,
+            });
+          }
+        } catch (docxErr) {
+          console.warn('Erro ao processar DOCX com mammoth:', docxErr);
+          // Fallback to text string extraction
+          try {
+            const rawBuffer = Buffer.from(fileAttachment.base64, 'base64');
+            const asciiText = rawBuffer.toString('utf-8').replace(/[^\x20-\x7E\t\n\r\u00A0-\u024F]/g, ' ').replace(/\s{2,}/g, ' ');
+            parts.push({
+              text: `[TEXTO EXTRAÍDO DO DOCUMENTO WORD "${fileName}"]:\n${asciiText.slice(0, 8000)}`,
+            });
+          } catch {
+            parts.push({
+              text: `Documento Word anexado: ${fileName}.`,
+            });
+          }
+        }
+      } else if (fileName.match(/\.doc$/i)) {
+        // Legacy Word 97-2003 binary format (.doc)
+        // Extract readable unicode/ascii strings from binary stream
+        try {
+          const rawBuffer = Buffer.from(fileAttachment.base64, 'base64');
+          // Extract utf8 strings
+          const extracted = rawBuffer
+            .toString('latin1')
+            .replace(/[^\x20-\x7E\t\n\r\u00A0-\u00FF]/g, ' ')
+            .replace(/\s{3,}/g, '\n')
+            .trim();
+
+          if (extracted.length > 50) {
+            parts.push({
+              text: `[TEXTO EXTRAÍDO DO ARQUIVO WORD (.doc LEGADO) "${fileName}"]:\n\n${extracted.slice(0, 15000)}`,
+            });
+          } else {
+            parts.push({
+              text: `[ARQUIVO WORD .DOC LEGADO: "${fileName}"] O arquivo está no formato binário legado Word 97-2003 (.doc). Por favor, analise as iniciativas descritas neste documento.`,
+            });
+          }
+        } catch (docErr) {
+          console.warn('Erro ao extrair strings de .doc binário:', docErr);
+          parts.push({
+            text: `Arquivo Word legado recebido: ${fileName}.`,
+          });
+        }
       } else if (mime === 'application/pdf' || fileName.endsWith('.pdf')) {
         parts.push({
           inlineData: {
@@ -474,16 +533,26 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
           text: `Documento PDF anexado pelo parceiro: ${fileName}. Por favor, analise todas as páginas e extraia as iniciativas propostas.`,
         });
       } else {
-        // Generic fallback inline data
-        parts.push({
-          inlineData: {
-            mimeType: mime || 'application/octet-stream',
-            data: fileAttachment.base64,
-          },
-        });
-        parts.push({
-          text: `Arquivo anexado pelo parceiro: ${fileName}.`,
-        });
+        // Do NOT send unknown octet-stream inlineData directly to Gemini models to prevent 400/504 errors
+        // Try to decode as readable text if possible
+        try {
+          const buf = Buffer.from(fileAttachment.base64, 'base64');
+          const possibleText = buf.toString('utf-8');
+          // If valid text, send as text
+          if (possibleText && possibleText.length > 20 && !/[\x00-\x08\x0E-\x1F]/.test(possibleText.slice(0, 200))) {
+            parts.push({
+              text: `[CONTEÚDO DO ARQUIVO "${fileName}"]:\n\n${possibleText.slice(0, 15000)}`,
+            });
+          } else {
+            parts.push({
+              text: `Arquivo anexado pelo parceiro corporativo: "${fileName}".`,
+            });
+          }
+        } catch {
+          parts.push({
+            text: `Arquivo anexado pelo parceiro corporativo: "${fileName}".`,
+          });
+        }
       }
     }
 
@@ -621,6 +690,18 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
       const pdfUrl = mainCatalog?.pdfUrl || primaryOpt?.pdfUrl;
       const partnerPortalUrl = mainCatalog?.partnerPortalUrl || primaryOpt?.partnerPortalUrl;
 
+      // Determine viability status
+      let viabilityStatus = init.viabilityStatus;
+      if (!viabilityStatus) {
+        if (init.adherenceLevel === 'Alto') {
+          viabilityStatus = 'Aderente (Match Direto)';
+        } else if (init.adherenceLevel === 'Médio') {
+          viabilityStatus = 'Ajuste de Escopo Necessário';
+        } else {
+          viabilityStatus = 'Fora de Escopo Computacional';
+        }
+      }
+
       return {
         ...init,
         id: init.id || `init-${idx + 1}`,
@@ -631,6 +712,14 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
         matchedCourse: course,
         matchedModule,
         matchedYear: year,
+        viabilityStatus,
+        recommendedAction: init.recommendedAction || (
+          viabilityStatus === 'Aderente (Match Direto)'
+            ? 'Avançar para TAPI / Elaboração de Escopo com PO'
+            : viabilityStatus === 'Ajuste de Escopo Necessário'
+            ? 'Pactuar adaptação de escopo na reunião com parceiro'
+            : 'Sugerir reformulação ou redirecionamento'
+        ),
         pdfUrl,
         partnerPortalUrl,
         options,
@@ -642,8 +731,60 @@ Ao final, inclua estritamente o bloco JSON para alimentar a interface do coorden
       };
     });
 
+    // Compute portfolio summary metrics deterministically
+    const totalCount = normalizedInitiatives.length;
+    let directMatchCount = 0;
+    let scopeAdjustmentCount = 0;
+    let outOfScopeCount = 0;
+
+    const courseCounts: Record<string, { count: number; frentes: string }> = {
+      'Sistemas de Informação': { count: 0, frentes: 'Governança, Analytics, Data Apps e Integração ERP' },
+      'Engenharia de Software': { count: 0, frentes: 'Plataformas Web, Arquitetura Distribuída e Mobile' },
+      'Engenharia de Computação': { count: 0, frentes: 'IoT de Bancada, Firmware e Redes Industriais' },
+      'Ciência da Computação': { count: 0, frentes: 'Otimização Matemática, Algoritmos Avançados e IA' },
+      'Administração': { count: 0, frentes: 'Modelagem de Negócios, Viabilidade e Estratégia' },
+    };
+
+    normalizedInitiatives.forEach((init: any) => {
+      if (init.viabilityStatus === 'Aderente (Match Direto)') {
+        directMatchCount++;
+      } else if (init.viabilityStatus === 'Ajuste de Escopo Necessário') {
+        scopeAdjustmentCount++;
+      } else {
+        outOfScopeCount++;
+      }
+
+      const c = (init.matchedCourse || '').toLowerCase();
+      if (c.includes('sistemas') || c.includes('informação')) courseCounts['Sistemas de Informação'].count++;
+      else if (c.includes('software')) courseCounts['Engenharia de Software'].count++;
+      else if (c.includes('computação') && (c.includes('engenharia') || c.includes('hardware') || c.includes('iot'))) courseCounts['Engenharia de Computação'].count++;
+      else if (c.includes('ciência') || c.includes('dados') || c.includes('ia')) courseCounts['Ciência da Computação'].count++;
+      else if (c.includes('administração') || c.includes('negócios')) courseCounts['Administração'].count++;
+      else courseCounts['Engenharia de Software'].count++;
+    });
+
+    const courseDistribution = Object.entries(courseCounts)
+      .filter(([_, data]) => data.count > 0)
+      .map(([course, data]) => ({
+        course,
+        count: data.count,
+        frentes: data.frentes,
+      }));
+
+    const portfolioSummary = {
+      totalCount,
+      directMatchCount,
+      scopeAdjustmentCount,
+      outOfScopeCount,
+      directMatchPercentage: totalCount > 0 ? Math.round((directMatchCount / totalCount) * 100) : 0,
+      scopeAdjustmentPercentage: totalCount > 0 ? Math.round((scopeAdjustmentCount / totalCount) * 100) : 0,
+      outOfScopePercentage: totalCount > 0 ? Math.round((outOfScopeCount / totalCount) * 100) : 0,
+      courseDistribution,
+    };
+
     const result = {
       initiatives: normalizedInitiatives,
+      portfolioSummary,
       coordinatorNextStep: structuredData.coordinatorNextStep || 'Agendar reunião com o parceiro para refinamento de escopo.',
       rawMarkdownOutput: cleanMarkdown,
       totalInitiatives: normalizedInitiatives.length,

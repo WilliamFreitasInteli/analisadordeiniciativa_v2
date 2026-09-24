@@ -405,10 +405,10 @@ export const InputPanel: React.FC<InputPanelProps> = ({
                   Clique ou arraste um documento ou planilha corporativa aqui
                 </p>
                 <p className="text-xs text-[#6c657e] mt-1">
-                  Formatos aceitos: PDF, Planilhas (CSV, XLSX), Documentos (DOCX, TXT)
+                  Formatos aceitos: PDF, Word (.DOCX, .DOC), Planilhas (CSV, XLSX), Textos (.TXT)
                 </p>
                 <span className="mt-3 inline-flex items-center px-2.5 py-1 rounded text-[11px] font-medium bg-white text-[#364f99] border border-[#d8dce6]">
-                  O assistente multimodal lerá as iniciativas contidas no documento
+                  Dica: Para arquivos Word, salvar como .DOCX ou exportar em PDF garante máxima precisão estrutural
                 </span>
               </div>
             ) : (

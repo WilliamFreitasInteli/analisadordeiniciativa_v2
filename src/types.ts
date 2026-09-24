@@ -1,4 +1,5 @@
 export type AdherenceLevel = 'Alto' | 'Médio' | 'Baixo';
+export type ViabilityStatus = 'Aderente (Match Direto)' | 'Ajuste de Escopo Necessário' | 'Fora de Escopo Computacional';
 
 export interface ModuleOption {
   id: string;
@@ -36,6 +37,8 @@ export interface InitiativeMatch {
   matchJustification: string[];
   adherenceLevel: AdherenceLevel;
   adherenceJustification: string;
+  viabilityStatus?: ViabilityStatus; // 'Aderente (Match Direto)' | 'Ajuste de Escopo Necessário' | 'Fora de Escopo Computacional'
+  recommendedAction?: string; // Ação recomendada (ex: 'Avançar para TAPI', 'Ajustar limites de simulação', etc.)
   potentialRisksOrGaps?: string[];
   keyTechnologies?: string[];
   scopeFitDurationWeeks?: number;
@@ -47,8 +50,24 @@ export interface InitiativeMatch {
   decisionGuidance?: string; // Guia para a reunião com o parceiro: como escolher entre as opções
 }
 
+export interface PortfolioSummary {
+  totalCount: number;
+  directMatchCount: number;
+  scopeAdjustmentCount: number;
+  outOfScopeCount: number;
+  directMatchPercentage: number;
+  scopeAdjustmentPercentage: number;
+  outOfScopePercentage: number;
+  courseDistribution: {
+    course: string;
+    count: number;
+    frentes: string;
+  }[];
+}
+
 export interface MatchmakingResult {
   initiatives: InitiativeMatch[];
+  portfolioSummary?: PortfolioSummary;
   coordinatorNextStep: string;
   rawMarkdownOutput: string;
   totalInitiatives: number;
